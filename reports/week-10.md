@@ -2,8 +2,6 @@
 
 ## Completed Work
 
-Official window: November 2–8, 2026. This outstanding report and planning work were prepared on November 9, after the window; they do not establish student activity during Week 10.
-
 Inspected the fork, clean baseline, branch/history, official requirements, calendar, templates, scripts and CI. Confirmed GitHub fork parent is `ardakshalkar/css4007-ai-agents-final`. Prepared RestoreProof's Level A proposal, typed tool contracts, safety boundaries, independent verification design, S1–S6 scenarios and 16-case evaluation plan. Added the roadmap, compact project map and persistent agent instructions. No original Week 10 student activity was found in the inspected history.
 
 ## Important Commits
