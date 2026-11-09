@@ -9,7 +9,7 @@ Inspected the fork, clean baseline, branch/history, official requirements, calen
 ## Important Commits
 
 - [`b537533`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/b537533bff85ec71879b903ecb70ed16f3759965): inherited instructor starter, November 2; not student progress.
-- Planning change subject: `docs: plan RestoreProof Level A project and complete late Week 10 deliverables`. No hash existed at report drafting time; locate the resulting commit with `git log --oneline --grep='docs: plan RestoreProof'`. Publication and exact-commit CI evidence are tracked in `docs/ROADMAP.md`. Retain actual commit dates.
+- [`9716249`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/97162498a858e9dd382482b227688a82386c3114): `docs: plan RestoreProof Level A project and complete late Week 10 deliverables`, committed and pushed November 9 at 23:06:46 UTC+05. This is late planning, not original Week 10 activity. Publication/CI evidence is tracked in `docs/ROADMAP.md`.
 
 ## Current Functionality
 
@@ -22,6 +22,8 @@ The reporting window has ended; inherited commits cannot prove student activity.
 ## Solutions
 
 Recorded November 9 as the actual planning date and left future reports untouched. Preserved instructor assets. Restricted the MVP to controlled custom-format dumps, trusted independent manifests and run-owned disposable resources. Recorded provider access and sandbox enforcement as implementation prerequisites. Check outcomes and remaining blockers are kept in the roadmap without invented measurements.
+
+Local verification on November 9: `npm run proposal`, `npm run report -- 10`, `npm run validate`, `npm run activity` all exited 0; `npm test` passed 10/10 starter tests. These establish report completeness and starter health only. GitHub Actions was dispatched; its observed status was queued, not a successful result.
 
 ## What I Learned
 
