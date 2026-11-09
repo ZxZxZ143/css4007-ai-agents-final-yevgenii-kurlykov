@@ -23,7 +23,7 @@ The reporting window has ended; inherited commits cannot prove student activity.
 
 Recorded November 9 as the actual planning date and left future reports untouched. Preserved instructor assets. Restricted the MVP to controlled custom-format dumps, trusted independent manifests and run-owned disposable resources. Recorded provider access and sandbox enforcement as implementation prerequisites. Check outcomes and remaining blockers are kept in the roadmap without invented measurements.
 
-Local verification on November 9: `npm run proposal`, `npm run report -- 10`, `npm run validate`, `npm run activity` all exited 0; `npm test` passed 10/10 starter tests. These establish report completeness and starter health only. GitHub Actions was dispatched; its observed status was queued, not a successful result.
+Local verification on November 9: `npm run proposal`, `npm run report -- 10`, `npm run validate`, `npm run activity` all exited 0; `npm test` passed 10/10 starter tests. These establish report completeness and starter health only. [GitHub Actions 42671441343](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/42671441343) completed successfully for published evidence commit `f0e68e7fdb3003ef4362492ccf158ae7d78ab05e`; it ran starter tests and validation with required week 10. Later commits require their own CI check.
 
 ## What I Learned
 
