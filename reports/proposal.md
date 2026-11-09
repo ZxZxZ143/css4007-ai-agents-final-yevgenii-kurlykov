@@ -1,6 +1,6 @@
-# Project Proposal — Semester Week 10
+# Project Proposal — Semester Week 10 (November 2–8, 2026)
 
-Prepared 2026-11-09, after the November 2–8 window. All RestoreProof capabilities below are planned, not implemented. AI assistance: Codex inspected the repository, drafted planning documents and ran checks; the student remains responsible for review, implementation and defense.
+All RestoreProof capabilities below are planned, not implemented. AI assistance: Codex inspected the repository, drafted planning documents and ran checks; the student remains responsible for review, implementation and defense. Actual preparation activity is recorded in `reports/week-10.md` and Git history.
 
 ## Project Title
 
@@ -60,9 +60,15 @@ Trusted manifests are maintained separately from dumps: expected schema objects,
 
 ## Proposed Agent Tools
 
-All eight functions above are proposed LLM-callable tools. Inspection/compatibility inform planning; sandbox/restore execute the test; diagnostic probes permit adaptive investigation; verification/comparison challenge apparent success; reporting binds conclusions to evidence. At least three tools must be genuinely selected by the LLM in the implemented prototype.
+All eight functions above remain proposed LLM-callable tools, exposed only when the current phase and policy permit them. Inspection/compatibility inform planning; sandbox/restore execute the test; diagnostic probes permit adaptive investigation; verification/comparison challenge apparent success; reporting binds conclusions to evidence. The completed prototype must demonstrate genuine model selection of at least three meaningful tools, for example `inspect_failure`, `check_compatibility` and `execute_restore`, with model call IDs and observed arguments/outcomes in the trace. Calling a function from a deterministic graph node does not count as LLM selection.
+
+Mandatory inspection, compatibility gating, independent verification/comparison and final reporting may invoke the same Python services as deterministic graph nodes. The model cannot skip these stages or declare success instead of verifying. It can request additional checks, choose diagnostic probes and propose an approved alternative. LangGraph constrains transitions while OpenAI selects meaningful actions within the allowed phase.
+
+Planned calling pattern: bind phase-allowed typed schemas with `ChatOpenAI.bind_tools`, receive model tool calls, validate schema/state/budgets/approval in the Python dispatcher, execute the service, and return sanitized evidence with the matching tool-call ID. Strict schemas do not replace permission or semantic validation. This follows the [LangChain-maintained OpenAI integration](https://docs.langchain.com/oss/python/integrations/chat/openai) and [OpenAI function-calling contract](https://developers.openai.com/api/docs/guides/function-calling); neither integration has been tested in this repository.
 
 Validate required fields, types, allowed enums, ranges and run-bound IDs; reject unknown fields. Check state preconditions and permissions before dispatch. Bound all output and treat metadata/logs/tool results as untrusted data.
+
+Every service will return a typed error envelope with operation ID, error category, retryability and evidence IDs; failures are observations, never implicit success. Inspection records archive/hash evidence even on rejection; compatibility records unresolved dependencies; sandbox creation records readiness or owned-resource cleanup evidence; restore records bounded stderr/exit/timeout; diagnostics record probe provenance; verification/comparison record each check and missing reference; reporting refuses unsupported claims and records any missing artifacts. Retry only permitted transient failures within budget. Unsupported input, policy denial or missing approval cannot be retried into permission.
 
 | Tool | Validation, permissions and restrictions |
 |---|---|
@@ -75,47 +81,96 @@ Validate required fields, types, allowed enums, ranges and run-bound IDs; reject
 | `compare_results` | Recorded evidence/reference IDs only; cannot edit expectations or erase concessions |
 | `generate_report` | Current run artifact directory only; no arbitrary verdict, unrelated overwrite or external publishing |
 
-Initial explicit approval covers creating/restoring/cleaning disposable resources within configured limits. Ownership bypass requires additional approval bound to run, action, parameters and expiry; model output cannot mint approval. Denied/missing approval stops that path. Cleanup touches only resources in the run ownership ledger. The LLM never receives unrestricted shell, filesystem or Docker control.
+Initial explicit approval covers creating/restoring/cleaning disposable resources within configured limits. Ownership bypass requires additional approval bound to run, action, parameters and expiry; model output cannot mint approval. Use a dedicated LangGraph approval node with `interrupt()` and resume via `Command(resume=...)` on the same authorized thread. Application code validates the authenticated decision, exact parameter hash, expiry and current policy again before execution; a raw resume payload is not authorization. Keep effects after the approval boundary, with reconciliation on replay. Denied/missing approval stops that path. Cleanup touches only resources in the run ownership ledger; Python decides what is safe to remove. See [interrupt/resume rules](https://docs.langchain.com/oss/python/langgraph/interrupts).
 
-Docker limits accidental interference but does not completely protect against malicious SQL, extensions, container escapes or resource abuse. Accept controlled fixtures only in a dedicated local test environment. Restore containers receive no secrets or Docker socket. Only the application controls Docker. Alternatives use preapproved profiles; unsupported dependencies stop with evidence.
+Docker limits accidental interference but does not completely protect against malicious SQL, extensions, container escapes or resource abuse. Accept controlled fixtures only in a dedicated local test environment. Restore containers receive no secrets or Docker socket and have no unrestricted network/Internet access; only the approved run-local connectivity is allowed. Only the application controls Docker. Alternatives use preapproved profiles; unsupported dependencies stop with evidence.
 
 ## Model Selection
 
-Provisional choice: a hosted instruction-following LLM with native structured tool/function calling through a Python adapter. Provider and exact model remain unresolved; credentials, API access, cost and successful calls have not been established. W11-02 selects an accessible model through a real schema-valid tool-call smoke test and checks latency/cost. Model ID and budgets will be configurable; credentials stay in environment variables outside Git. Mocked tests never count as real integration evidence.
+Final provider decision: **OpenAI GPT models through the OpenAI API**. LangGraph orchestrates the agent; OpenAI provides reasoning, structured outputs, error interpretation, diagnostic tool selection and concise evidence-grounded explanations. Use the official LangChain-maintained `langchain-openai` integration (`ChatOpenAI`) compatible with LangGraph, backed by the official OpenAI Python client. This is not OpenAI Agents SDK; that SDK must not orchestrate RestoreProof.
+
+The exact GPT model stays configurable and unset until W11-02 verifies account/API availability, tool-calling and structured-output support, reliability, latency and cost. No model name, credentials, API access or working integration is asserted. Model ID and budgets belong in configuration; credentials stay in environment variables outside Git. Mocked tests never count as real integration evidence.
 
 ## Architecture
 
-Planned stack: Python 3.12+, CLI/minimal FastAPI, LangGraph single agent, Pydantic, Docker/PostgreSQL utilities, SQLite state/audit/results, pytest and GitHub Actions. CLI first; frontend is outside the critical path.
+Final responsibilities (all implementation remains planned):
+
+| Layer | Owner and responsibility |
+|---|---|
+| Orchestration | LangGraph `StateGraph`: explicit state, nodes, conditional edges, planning loops, checkpoints, controlled resume and human interrupts; no OpenAI Agents SDK |
+| Intelligence | OpenAI GPT via `langchain-openai`: reason over bounded observations, choose permitted tools and explain evidence |
+| Application services | Python 3.12+, Pydantic, CLI/minimal FastAPI: input validation, permissions, Docker/PostgreSQL execution, budgets, deterministic verdicts and cleanup |
+| Persistence | Persistent LangGraph SQLite checkpointer for graph state; application-owned SQLite ledger for operations, approvals, audit and immutable evidence |
+| Recovery environment | Approved disposable Docker + PostgreSQL only; no production access |
+| Testing | pytest application suite and GitHub Actions; preserved instructor Node checks remain separate |
+
+CLI first; frontend stays outside the critical path. The model is never the authority for permissions, success or cleanup.
 
 ```mermaid
 flowchart TD
-    U[User goal and approved fixture / manifest] --> API[CLI / FastAPI validation]
-    API --> A[Recovery Agent / Planner: LangGraph + LLM]
-    A --> P[Policy and Execution Limit Manager]
-    P --> I[Backup Inspector / Compatibility Analyzer]
-    P --> S[Sandbox Manager / Restoration Executor]
-    P --> D[Failure Diagnostic Engine]
-    P --> V[Verification Engine / Comparator]
-    S --> DB[Disposable PostgreSQL]
-    D --> DB
+    U[User goal] --> IN[Validate registered backup and manifest]
+    subgraph LG[LangGraph stateful orchestration]
+        IN --> I[Inspect backup]
+        I --> C[Compatibility and dependency gate]
+        C --> P[Recovery planning: OpenAI GPT]
+        P --> G[Python policy and budget gate]
+        G --> H{Additional approval needed?}
+        H -->|yes| A[Interrupt / validate human resume]
+        H -->|no| S[Approved sandbox / restore]
+        A -->|approved| S
+        A -->|denied| STOP[Record stop reason]
+        S --> O{Observe actual result}
+        O -->|restored| V[Mandatory independent verification / comparison]
+        O -->|failure| D[OpenAI diagnosis: select approved probes]
+        D -->|replan / bounded alternative| P
+        D -->|impossible| STOP
+        V -->|justified further investigation| D
+        V -->|terminal evidence| R[Deterministic verdict / evidence report]
+        STOP --> R
+        R --> CL[Python owned-resource cleanup]
+    end
+    LG <--> CP[SQLite graph checkpoints]
+    S <--> LED[SQLite operation / ownership / evidence ledger]
+    V --> LED
+    S --> DB[Disposable Docker PostgreSQL]
     V --> DB
-    I --> O[Validated observations]
-    S --> O
-    D --> O
-    V --> O
-    O --> A
-    A <--> ST[SQLite State and Trace Storage]
-    O --> ST
-    ST --> R[Report Generator / deterministic verdict]
-    V --> R
-    R --> U
+    CL --> OUT[Final report with cleanup outcome]
 ```
 
-Explicit state includes goal, fixture/manifest hashes, plan/node, attempts, observations/evidence IDs, approvals, verification coverage, degradation flags, counters and stopping reason. Persist validated transitions, selected actions, arguments, outcomes, concise decision summaries and errors. Redact secrets; hidden chain-of-thought is unnecessary.
+Conditional edges use actual state to route continue/replan/stop; unsupported input, denial, impossible recovery or exhausted budgets routes through reporting and bounded cleanup from any stage. A strict restore that exits 0 still reaches mandatory independent verification. Failure reports list checks that could not run; final verification must never invent results for an unavailable database. This combines mandatory stages with model-selected diagnosis, not a hardcoded diagnostic command sequence. Planned API basis: [Graph API state/nodes/conditional edges](https://docs.langchain.com/oss/python/langgraph/graph-api).
+
+### State, checkpoints and external operations
+
+Proposed typed graph state:
+
+| Fields | Meaning |
+|---|---|
+| `run_id`, `user_goal`, `backup_id`, `manifest_id` | Validated identity/goal; registered artifact references |
+| `current_phase`, `recovery_plan` | Controlled graph phase and revisable structured plan |
+| `attempt_history`, `diagnostic_observations`, `evidence_ids` | Ordered operation/evidence references and bounded summaries |
+| `verification_results`, `approval_status`, `degradation_flags` | Verification/approval references and persistent concessions |
+| `steps_used`, `tool_calls_used`, `retry_counts` | Budget projections reconstructed from durable application records |
+| `stop_reason`, `final_status` | Explicit reason and evidence-supported terminal outcome |
+
+Also retain fixture/manifest hashes, token/time accounting and immutable deadline, current operation/sandbox IDs and pending approval parameter hash. Use one authorized LangGraph `thread_id` per run. Compile with a persistent SQLite checkpointer (`SqliteSaver` or `AsyncSqliteSaver` from the separately installed `langgraph-checkpoint-sqlite`, matching the chosen sync/async execution). Checkpoints own graph control state; separate application SQLite tables own approvals, operation lifecycle, resource ownership and append-only evidence. State holds references/projections, not a second editable source of truth. Update evidence by adding superseding records, not overwriting observations. See [persistence](https://docs.langchain.com/oss/python/langgraph/persistence) and [SQLite checkpointers](https://docs.langchain.com/oss/python/langgraph/checkpointers).
+
+A checkpoint records graph progress, not proof of an external effect. The operation ledger distinguishes `STARTED`, `COMPLETED` (external result recorded) and `VERIFIED` (postcondition evidence validated), as well as `FAILED`/`UNKNOWN`. These operation statuses are separate from final recovery verdicts. Persist an operation ID, validated parameter hash and ownership intent before a side effect; completed results link exit/readiness evidence, verified results link postcondition checks. Serialize workers per run and reserve budget in the ledger before dispatch, so replay cannot reset counters.
+
+On resume, reconcile checkpoints against the ledger and actual owned Docker resources/process results before continuing. A crash after creation/restore but before recording completion means UNKNOWN, not "never executed." Find resources by recorded run/operation labels; reuse only after readiness/content checks. Never blindly rerun restore in the same database or create duplicate containers. If an interrupted restore cannot be established, stop or terminate/clean its owned resources and allocate a fresh, separately authorized attempt within remaining budget. Conflicting ownership or unresolvable evidence stops for assistance. Checkpointer and external Docker operations cannot be treated as one atomic transaction.
+
+LangGraph can re-execute a node after interruption or failure; side effects therefore require application reconciliation/idempotency rather than a claim of exactly-once execution. Approval nodes must have no unreconciled effects before the interrupt. Test crash windows before execution, after external completion/before ledger update, and after ledger update/before checkpoint, plus denied/expired/changed-parameter resume. These supplement the existing T/G test plan. See [fault tolerance and side-effect boundaries](https://docs.langchain.com/oss/python/langgraph/fault-tolerance).
+
+Persist selected actions, validated arguments, outcomes, concise decision summaries and errors; redact secrets and do not store hidden chain-of-thought. These mechanisms are design requirements, not tested capabilities.
 
 The LLM chooses diagnostic order and revises the plan using intermediate observations. The dispatcher can reject a choice; only verifier evidence supports success. For example, a role error leads to role inspection and either an approved degraded `no_owner` retry in a fresh sandbox or a stop. An extension error instead leads to compatibility/profile investigation or an unsupported-dependency report.
 
 Provisional configurable caps: 12 agent steps, 16 tool calls, 2 retries per failed operation, 20,000 total input/output LLM tokens/run, 120 seconds/subprocess, 10 minutes wall time, one live sandbox, 1 GiB RAM, 1 CPU, 2 GiB sandbox disk. W11-01 must establish enforceable disk quotas; fail closed if required caps cannot be enforced. Check budgets before dispatch, bound model calls/output and reserve bounded cleanup. Stop on completed checks, definitive failure, denied approval, unsupported input, essential missing evidence, repeated failure, cancellation or exhausted budgets. Report cleanup failures explicitly.
+
+An approval interrupt must not retain a live sandbox indefinitely: the supervisor expires the run at its persisted deadline and cleans only owned resources, even if the graph remains paused. Resume after expiry is rejected; budgets/deadlines never reset on checkpoint load.
+
+### Dependency verification boundary
+
+Official documentation and PyPI metadata checked 2026-11-09: [langgraph](https://pypi.org/project/langgraph/) 1.2.20, [langchain-openai](https://pypi.org/project/langchain-openai/) 1.7.4, [langgraph-checkpoint-sqlite](https://pypi.org/project/langgraph-checkpoint-sqlite/) 3.1.3. All declare Python >=3.10 (the OpenAI integration also <4); Python 3.12+ remains the project choice. Shared declared dependency ranges overlap, but this is not a resolved/tested environment or a version pin. W11-01/02 must resolve and lock compatible versions, test imports/checkpoint serialization and verify real OpenAI tool calls before claiming compatibility. No packages or application features were installed/implemented in this documentation task.
 
 ## Example Requests
 

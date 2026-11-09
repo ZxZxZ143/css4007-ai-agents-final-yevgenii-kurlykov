@@ -17,7 +17,7 @@ Only instructor Node.js utilities, sample guardrails, starter tests and report c
 
 ## Problems Encountered
 
-The reporting window has ended; inherited commits cannot prove student activity. Provider/credentials and Docker limit feasibility are unverified. The Windows command sandbox failed with `CreateProcessSecurityEnvironment failed (HRESULT = 0x8007000F)`; approved elevated commands were needed. Repository completeness checks cannot prove application correctness or academic credit.
+The reporting window has ended; inherited commits cannot prove student activity. OpenAI GPT is the selected provider family; exact model/API access and Docker limit feasibility are unverified. The Windows command sandbox failed with `CreateProcessSecurityEnvironment failed (HRESULT = 0x8007000F)`; approved elevated commands were needed. Repository completeness checks cannot prove application correctness or academic credit.
 
 ## Solutions
 
@@ -31,4 +31,4 @@ The design review clarified that command success requires independent content ch
 
 ## Next Week
 
-Start W11-01 in `docs/ROADMAP.md`: establish Python 3.12+ and verify enforceable Docker resource caps. Then W11-02 selects an accessible provider and proves a real schema-valid tool call; W11-03 adds the validated request prototype and setup documentation. Late planning does not count as completed Week 11 implementation.
+Start W11-01 in `docs/ROADMAP.md`: establish Python 3.12+, resolve compatible LangGraph/OpenAI integration/checkpointer packages and verify enforceable Docker caps. Then W11-02 verifies an accessible configurable OpenAI GPT model and real schema-valid tool call through `langchain-openai`; LangGraph owns orchestration, without OpenAI Agents SDK. W11-03 adds the validated request prototype and setup documentation. Late planning does not count as completed Week 11 implementation.

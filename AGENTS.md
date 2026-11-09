@@ -10,6 +10,7 @@
 ## During work
 
 - Follow recorded scope/architecture. Update roadmap scope/dependencies when they change; record finalized decisions in their owning document. Never silently change an accepted constraint.
+- Final architecture: LangGraph orchestrates; OpenAI GPT models via `langchain-openai` provide reasoning/tool selection; deterministic Python services enforce permissions, verdicts and cleanup. Do not use OpenAI Agents SDK for orchestration. Keep GPT model configurable until API availability/capabilities are verified. Mandatory graph nodes do not count as LLM-selected tools. Checkpoint resume must reconcile the SQLite operation/ownership ledger before external effects; human approval uses validated, action-bound interrupt/resume. Details live in the proposal.
 - Preserve instructor instructions, templates, scripts, CI and report paths. Never alter validators to bypass incomplete work. Leave future reports as templates until actual work occurs.
 - Preserve verification evidence. DONE requires met acceptance criteria; code also needs relevant passing tests and green CI for its latest relevant commit. Do not start dependent work before prerequisites are verified. Use VERIFYING/BLOCKED accurately.
 - Never invent implementation, activity, dates, commits, API access, metrics, paper details or CI success. Record late work honestly and disclose AI assistance.
