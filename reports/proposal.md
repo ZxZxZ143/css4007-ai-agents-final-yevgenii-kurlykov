@@ -71,6 +71,8 @@ The dispatcher will reject unknown fields, unavailable tools, foreign IDs and ex
 
 OpenAI GPT through the official OpenAI API and the LangChain `langchain-openai` integration. LangGraph owns orchestration. OpenAI Agents SDK is excluded. The exact model ID stays configurable until a real smoke test verifies availability, schema-valid tool calling, structured responses, reliability, latency and cost. API credentials stay outside Git and outside both agents' tool context. Account access and model behavior remain unverified.
 
+The Week 11 prototype defaults to `gpt-5.6-luna` through the Responses API with low reasoning effort. Its read-only `list_scenarios` schema accepts one category or `null` and returns matching descriptions from the static S1, S2 and S5 catalog. The future Auditor contract above adds audit scope and registry revisions.
+
 ## Architecture
 
 Python 3.12+ and Pydantic will provide a CLI-first interface, tool dispatch, mock services and deterministic verification. LangGraph will use typed state and conditional edges with SQLite checkpoints. pytest will cover the application, with GitHub Actions for verification alongside the course checks. The local mock runner requires no container infrastructure.

@@ -16,6 +16,25 @@ Design, implement, test, and demonstrate an application powered by an LLM. You m
 
 The diagnostic recommends a level; students may choose any level. The professor assesses the highest level actually demonstrated. A single agent can meet A-level requirements; a framework or multiple agents alone does not establish that level.
 
+## Run the AgentShield Lab prototype
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use Python 3.12 or newer. From the repository root:
+
+```sh
+uv sync --locked --python 3.12
+uv run --locked pytest
+uv run --locked agentshield scenarios --category reliability
+```
+
+For live requests, copy `.env.example` to `.env` and set `OPENAI_API_KEY` locally. The default `OPENAI_MODEL` is `gpt-5.6-luna`. Set it explicitly to use a different supported model. Keep the local `.env` outside Git.
+
+```sh
+uv run --locked agentshield ask --verbose "List available security testing scenarios."
+uv run --locked agentshield ask --verbose "What is AgentShield Lab?"
+```
+
+The LangGraph model node can request `list_scenarios`, which filters the synthetic Helpdesk catalog. The tool node validates the arguments and returns the result to the model. A direct answer ends the graph. The verbose summary shows tool call IDs, validated arguments, results, response usage and elapsed time. Each graph run is limited to six steps.
+
 ## Start here
 
 1. **Fork** [the instructor repository](https://github.com/ardakshalkar/css4007-ai-agents-final/fork) into your own account. Use a fork so the submission retains its relationship to the instructor repository.

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentshield"
+version = "0.1.0"
+description = "AgentShield Lab synthetic scenario catalog prototype"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-core>=1,<2",
+    "langchain-openai>=1,<2",
+    "langgraph>=1,<2",
+    "openai>=2,<3",
+    "pydantic>=2,<3",
+    "python-dotenv>=1,<2",
+]
+
+[project.scripts]
+agentshield = "agentshield.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=9,<10"]
