@@ -28,3 +28,7 @@ The architecture review identified the need to separate graph checkpoints from o
 ## Next Week
 
 Begin AgentShield Lab with the Python setup in W11-01, followed by the live OpenAI tool call and minimal CLI. Then build the first synthetic Helpdesk scenario and verify it through recorded tool behavior and mock state.
+
+## Carryover completed November 17
+
+The Week 11 prototype was implemented during Week 12 ahead of the November 18 classroom review. The locked Python setup, CLI and both live GPT-5.6 Luna checks passed locally. The [Week 12 report](week-12.md) records the implementation commit and tool-call evidence.

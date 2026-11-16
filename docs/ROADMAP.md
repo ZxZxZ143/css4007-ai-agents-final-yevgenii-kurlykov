@@ -1,6 +1,6 @@
 # AgentShield Lab implementation roadmap
 
-The windows below follow [project.config.json](../project.config.json). The [proposal](../reports/proposal.md) owns the architecture, tool contracts and evaluation criteria. As of November 16, the Week 11 implementation gate remains open. Complete it first within Week 12, then deliver one S1 vertical slice before expanding scenarios. Keep academic dates and actual commit dates separate.
+The windows below follow [project.config.json](../project.config.json). The [proposal](../reports/proposal.md) owns the architecture, tool contracts and evaluation criteria. The Week 11 prototype passed verification on November 17 during Week 12. Deliver the S1 vertical slice before expanding scenarios. Keep academic dates and actual commit dates separate.
 
 P0 gates dependent work. P1 is a required deliverable. Statuses are TODO, IN_PROGRESS, BLOCKED, VERIFYING and DONE. DONE requires acceptance evidence. Code tasks also need relevant tests and green CI for their latest relevant commit.
 
@@ -10,9 +10,9 @@ P0 gates dependent work. P1 is a required deliverable. Statuses are TODO, IN_PRO
 | W10-02 | Define AgentShield Lab and academic plan | P0 | W10-01 | All required proposal and elapsed-week report sections complete and factual | Course validators and manual historical review | DONE |
 | W10-03 | Align roadmap, project map and operating policy | P0 | W10-02 | One consistent architecture, dependencies and actionable next step | Review of current docs and task IDs | DONE |
 | W10-04 | Publish planning revision | P1 | W10-03 | Publish to student main and verify CI for that SHA | Published commit `91f391c` and [successful Actions run](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/43891953333) | DONE |
-| W11-01 | Establish Python environment | P0 | W10-03 | Python 3.12+, compatible package lock, clean setup and local mock runner prerequisites | Fresh install, import and config checks | TODO |
-| W11-02 | Verify OpenAI model and tool-call adapter | P0 | W11-01 | Configurable GPT via langchain-openai emits a schema-valid test call with recorded model, usage and latency | Real smoke trace, adapter tests and CI | TODO |
-| W11-03 | Add validated CLI entry point | P0 | W11-02 | Parse goals/config, report structured errors and handle a no-tool request | CLI smoke, invalid-input and model error tests | TODO |
+| W11-01 | Establish Python environment | P0 | W10-03 | Python 3.12+, compatible package lock, clean setup and local mock runner prerequisites | Fresh locked Python 3.12 install, imports, offline catalog and CI | DONE |
+| W11-02 | Verify OpenAI model and tool-call adapter | P0 | W11-01 | Configurable GPT via langchain-openai emits a schema-valid test call with recorded model, usage and latency | Luna selected `list_scenarios` through LangGraph. Python returned S2, backed by live trace and six offline tests | DONE |
+| W11-03 | Add validated CLI entry point | P0 | W11-02 | Parse goals/config, report structured errors and handle a no-tool request | Live CLI tool and no-tool requests, invalid category and missing credential checks | DONE |
 | W12-01 | Build synthetic fixtures and scenario registry | P0 | W11-03 | S1 goal, revisioned mock data, actor and separate oracle, with reset between tests | Fixture and reproducibility tests | TODO |
 | W12-02 | Implement Helpdesk Target and profile policy | P0 | W12-01 | Minimal mock search, status and ticket creation tools. Profiles share tools and ordinary capabilities. Protected validates scope and approval | Tool contract and profile parity tests | TODO |
 | W12-03 | Capture target traces and mock effects | P0 | W12-02 | Trace correlates model calls, arguments, decisions, failures and state snapshots | Replay S1 from registered inputs and verify event joins | TODO |
@@ -45,6 +45,6 @@ P0 gates dependent work. P1 is a required deliverable. Statuses are TODO, IN_PRO
 | 16 | Dec 14–20 | Application test suite, paired evaluation and live demo rehearsal |
 | 17 | Dec 21–22 | Final submission and defense. Deadline Dec 22 at 23:59 UTC+05 |
 
-Protect the vertical slice and genuine tool selection. If time is tight, defer a web UI, optional Helpdesk tools and extra variants. Keep paired inputs and deterministic oracles independent of model output. OpenAI API access and a suitable model remain unverified, so W11-02 must capture real evidence before dependent work. Paper selection can proceed independently by December 6.
+Protect the vertical slice and genuine tool selection. If time is tight, defer a web UI, optional Helpdesk tools and extra variants. Keep paired inputs and deterministic oracles independent of model output. W12-01 is unblocked. Paper selection can proceed independently by December 6.
 
-The current repository contains instructor utilities and tests. Local checks for the November 16 revision passed: proposal, Week 10 and Week 11 reports, repository validation, activity and 10 starter tests. Earlier evidence remains in the weekly reports and Git history. Academic activity credit is determined by the instructor.
+The Week 11 code commit `6aa8dfa` passed the Python and Node jobs. The live model trace and local verification are recorded in the dated report. [GitHub Actions](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/43951538156) · [Week 12 report](../reports/week-12.md)

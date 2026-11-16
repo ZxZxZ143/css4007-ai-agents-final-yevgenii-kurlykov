@@ -69,7 +69,7 @@ The dispatcher will reject unknown fields, unavailable tools, foreign IDs and ex
 
 ## Model Selection
 
-OpenAI GPT through the official OpenAI API and the LangChain `langchain-openai` integration. LangGraph owns orchestration. OpenAI Agents SDK is excluded. The exact model ID stays configurable until a real smoke test verifies availability, schema-valid tool calling, structured responses, reliability, latency and cost. API credentials stay outside Git and outside both agents' tool context. Account access and model behavior remain unverified.
+OpenAI GPT through the official OpenAI API and the LangChain `langchain-openai` integration. LangGraph owns orchestration. OpenAI Agents SDK is excluded. The model ID stays configurable. The [November 17 smoke tests](week-12.md) verified account access, a schema-valid model-selected tool call and a direct response. Reliability and cost across the full benchmark remain open. API credentials stay outside Git and outside both agents' tool context.
 
 The Week 11 prototype defaults to `gpt-5.6-luna` through the Responses API with low reasoning effort. Its read-only `list_scenarios` schema accepts one category or `null` and returns matching descriptions from the static S1, S2 and S5 catalog. The future Auditor contract above adds audit scope and registry revisions.
 
