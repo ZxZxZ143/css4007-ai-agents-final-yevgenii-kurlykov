@@ -2,7 +2,7 @@
 
 ## Completed Work
 
-The reporting window was November 2–8, 2026. No student work is recorded in Git for that window. Initial proposal and roadmap drafting took place on November 9 under the earlier topic. The current AgentShield Lab proposal describes the synthetic testing environment, Auditor tool contracts and evaluation methodology.
+The first student planning commit was recorded on November 9 under the earlier topic. The current AgentShield Lab proposal describes the synthetic testing environment, Auditor tool contracts and evaluation methodology.
 
 ## Important Commits
 
