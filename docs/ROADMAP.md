@@ -9,7 +9,7 @@ P0 gates dependent work. P1 is a required deliverable. Statuses are TODO, IN_PRO
 | W10-01 | Verify fork and requirements | P0 | — | Student fork and course calendar confirmed | Origin, GitHub parent and config reviewed | DONE |
 | W10-02 | Define AgentShield Lab and academic plan | P0 | W10-01 | All required proposal and elapsed-week report sections complete and factual | Course validators and manual historical review | DONE |
 | W10-03 | Align roadmap, project map and operating policy | P0 | W10-02 | One consistent architecture, dependencies and actionable next step | Review of current docs and task IDs | DONE |
-| W10-04 | Publish planning revision | P1 | W10-03 | Publish to student main and verify CI for that SHA | Remote commit and Actions run | VERIFYING |
+| W10-04 | Publish planning revision | P1 | W10-03 | Publish to student main and verify CI for that SHA | Published commit `91f391c` and [successful Actions run](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/43891953333) | DONE |
 | W11-01 | Establish Python environment | P0 | W10-03 | Python 3.12+, compatible package lock, clean setup and local mock runner prerequisites | Fresh install, import and config checks | TODO |
 | W11-02 | Verify OpenAI model and tool-call adapter | P0 | W11-01 | Configurable GPT via langchain-openai emits a schema-valid test call with recorded model, usage and latency | Real smoke trace, adapter tests and CI | TODO |
 | W11-03 | Add validated CLI entry point | P0 | W11-02 | Parse goals/config, report structured errors and handle a no-tool request | CLI smoke, invalid-input and model error tests | TODO |
