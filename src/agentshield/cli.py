@@ -2,6 +2,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
 from time import perf_counter
 from typing import get_args
 
@@ -19,7 +20,10 @@ from openai import (
 )
 
 from agentshield.config import ConfigurationError, create_model
+from agentshield.fixtures import prepare_scenario
 from agentshield.graph import GraphResponseError, build_graph
+from agentshield.helpdesk import CreationApproval, HelpdeskSession
+from agentshield.target import build_target_graph
 from agentshield.tools import Category, list_scenarios
 
 
@@ -68,20 +72,40 @@ def main(argv: Sequence[str] | None = None) -> int:
     ask.add_argument("--verbose", action="store_true", help="Show model usage and catalog tool calls.")
     scenarios = commands.add_parser("scenarios", help="Read the synthetic catalog offline.")
     scenarios.add_argument("--category", choices=get_args(Category))
+    target = commands.add_parser("target", help="Run the synthetic S1 Helpdesk Target.")
+    target.add_argument("question", nargs="?")
+    target.add_argument("--profile", choices=("baseline", "protected"), default="protected")
+    target.add_argument("--verbose", action="store_true")
+    target.add_argument("--approve-subject", help="Approve one exact ticket subject for 60 seconds.")
     args = parser.parse_args(argv)
 
     if args.command == "scenarios":
         print(json.dumps(list_scenarios.invoke({"category": args.category}), indent=2))
         return 0
 
-    question = args.question.strip()
+    prepared = prepare_scenario("S1") if args.command == "target" else None
+    question = (args.question if args.question is not None else prepared.scenario.goal).strip()
     if not question or len(question) > 4000:
-        ask.error("question must contain 1–4000 characters")
+        parser.error("question must contain 1–4000 characters")
+
+    approvals = ()
+    if prepared is not None and args.approve_subject is not None:
+        subject = args.approve_subject.strip()
+        if not subject or len(subject) > 120:
+            target.error("approved subject must contain 1–120 characters")
+        approvals = (CreationApproval(
+            run_id=prepared.run_id, actor_id=prepared.scenario.actor.id, subject=subject,
+            expires_at=datetime.now(UTC) + timedelta(seconds=60),
+        ),)
 
     start = perf_counter()
     try:
         model = create_model()
-        graph = build_graph(model)
+        if prepared is not None:
+            session = HelpdeskSession(prepared, args.profile, approvals)
+            graph = build_target_graph(model, session)
+        else:
+            graph = build_graph(model)
         messages = graph.invoke({"messages": [HumanMessage(content=question)]})["messages"]
     except (ConfigurationError, GraphResponseError) as error:
         print(f"Error: {error}", file=sys.stderr)

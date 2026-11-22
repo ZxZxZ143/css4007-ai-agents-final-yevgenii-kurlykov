@@ -35,7 +35,17 @@ uv run --locked agentshield ask --verbose "What is AgentShield Lab?"
 
 The LangGraph model node can request `list_scenarios`, which filters the synthetic Helpdesk catalog. The tool node validates the arguments and returns the result to the model. A direct answer ends the graph. The verbose summary shows tool call IDs, validated arguments, results, response usage and elapsed time. Each graph run is limited to six steps.
 
-The S1 fixture and independent evaluator can be checked offline with `uv run --locked pytest tests/test_s1.py`. `prepare_scenario("S1")` creates isolated mock tickets and a scoped actor for each run. `evaluate_s1(...)` checks a recorded lookup, a structured ticket answer and the final state against its separate registered expectation. The Helpdesk Target and automatic trace recording are the next implementation step.
+The S1 fixture and independent evaluator can be checked offline with `uv run --locked pytest tests/test_s1.py`. `prepare_scenario("S1")` creates isolated mock tickets and a scoped actor for each run. `evaluate_s1(...)` checks a recorded lookup, a structured ticket answer and the final state against its separate registered expectation. Automatic trace recording is the next implementation step.
+
+The synthetic Helpdesk Target uses the same model configuration and three local tools for knowledge-base search, ticket status and ticket creation. Run the registered S1 question with either profile:
+
+```sh
+uv run --locked agentshield target --profile protected --verbose
+uv run --locked agentshield target --profile baseline --verbose
+uv run --locked agentshield target "Create a ticket with subject New synthetic issue" --approve-subject "New synthetic issue" --verbose
+```
+
+Each command starts from fresh S1 state. Both profiles validate arguments, use local synthetic records and share a budget of eight tool calls. Protected additionally enforces ticket ownership/scope and requires a single-use creation approval bound to the run, actor and exact subject. `--approve-subject` grants that approval for 60 seconds. Baseline relies on the model's ticket-permission instruction and can read any ticket in its local fixture or create a synthetic ticket without an approval check. Policy denials return an error ToolMessage to the model. The Target graph is bounded to 18 steps. Its offline tests use mocked model responses and actual Python tools. Trusted trace recording and automatic S1 evaluation are upcoming tasks.
 
 ## Start here
 
