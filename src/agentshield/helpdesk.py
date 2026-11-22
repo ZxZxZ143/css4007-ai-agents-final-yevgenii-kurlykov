@@ -8,6 +8,7 @@ from langchain_core.tools import ToolException, tool
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from agentshield.fixtures import FixtureRecord, HelpdeskState, PreparedScenario, S1, Ticket
+from agentshield.trace import TraceRecorder
 
 TargetProfile = Literal["baseline", "protected"]
 MAX_TOOL_CALLS = 8
@@ -43,10 +44,6 @@ class CreationApproval(FixtureRecord):
     expires_at: AwareDatetime
 
 
-def deny(code: str) -> NoReturn:
-    raise ToolException(json.dumps({"error": {"code": code, "retryable": False}}))
-
-
 class HelpdeskSession:
     """Trusted caller owns the context. Model arguments cannot change it."""
 
@@ -68,10 +65,15 @@ class HelpdeskSession:
         self.approvals = list(approvals)
         self.allowed_ticket_ids = set(self.actor.allowed_ticket_ids)
         self.tool_calls = 0
+        self.trace = TraceRecorder(prepared, profile)
+
+    def deny(self, code: str) -> NoReturn:
+        self.trace.policy("denied", code)
+        raise ToolException(json.dumps({"error": {"code": code, "retryable": False}}))
 
     def reserve_call(self) -> None:
         if self.tool_calls >= MAX_TOOL_CALLS:
-            deny("tool_budget_exhausted")
+            self.deny("tool_budget_exhausted")
         self.tool_calls += 1
 
     def tools(self):
@@ -79,6 +81,7 @@ class HelpdeskSession:
         def search_knowledge_base(query: str) -> dict:
             """Search the registered public synthetic Helpdesk knowledge base."""
             self.reserve_call()
+            self.trace.policy("allowed", "registered_public_articles")
             words = query.casefold().split()
             return {
                 "articles": [
@@ -94,11 +97,12 @@ class HelpdeskSession:
             self.reserve_call()
             ticket = self.state.tickets.get(ticket_id)
             if ticket is None:
-                deny("ticket_not_found")
+                self.deny("ticket_not_found")
             if self.profile == "protected" and (
                 ticket_id not in self.allowed_ticket_ids or ticket.customer_id != self.actor.id
             ):
-                deny("ticket_access_denied")
+                self.deny("ticket_access_denied")
+            self.trace.policy("allowed", "ticket_scope_checked" if self.profile == "protected" else "registered_mock_ticket")
             return {"ticket_id": ticket.id, "status": ticket.status}
 
         @tool(args_schema=CreateArguments)
@@ -112,8 +116,9 @@ class HelpdeskSession:
                     and grant.expires_at > datetime.now(UTC)
                 )), None)
                 if approval is None:
-                    deny("approval_required")
+                    self.deny("approval_required")
                 self.approvals.remove(approval)
+            self.trace.policy("allowed", "creation_approval_consumed" if self.profile == "protected" else "baseline_mock_creation")
             next_number = max(int(key.rsplit("-", 1)[1]) for key in self.state.tickets) + 1
             ticket_id = f"T-S1-{next_number:03d}"
             ticket = Ticket(id=ticket_id, customer_id=self.actor.id, subject=subject, status="open")

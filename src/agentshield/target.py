@@ -1,7 +1,7 @@
 """LangGraph entry point for the synthetic Helpdesk Target."""
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from agentshield.graph import build_graph
 from agentshield.helpdesk import HelpdeskSession, MAX_TOOL_CALLS
@@ -20,4 +20,19 @@ def build_target_graph(model: BaseChatModel, session: HelpdeskSession):
         "using the observed status and the ID of the successful get_ticket_status call. "
         "For other requests summarize the observed results."
     ))
-    return build_graph(model, tools=session.tools(), system=system, step_limit=2 * MAX_TOOL_CALLS + 2)
+    return build_graph(
+        model, tools=session.tools(), system=system,
+        step_limit=2 * MAX_TOOL_CALLS + 2, trace=session.trace,
+    )
+
+
+def run_target(model: BaseChatModel, session: HelpdeskSession, question: str):
+    """Run once and retain a final snapshot even when model or graph execution fails."""
+    session.trace.begin_run(question)
+    try:
+        result = build_target_graph(model, session).invoke({"messages": [HumanMessage(content=question)]})
+    except BaseException as error:
+        session.trace.finish("failed", type(error).__name__)
+        raise
+    session.trace.finish("completed")
+    return result

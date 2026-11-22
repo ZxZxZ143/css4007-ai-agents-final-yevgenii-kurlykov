@@ -3,6 +3,7 @@ import json
 import sys
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from time import perf_counter
 from typing import get_args
 
@@ -23,7 +24,7 @@ from agentshield.config import ConfigurationError, create_model
 from agentshield.fixtures import prepare_scenario
 from agentshield.graph import GraphResponseError, build_graph
 from agentshield.helpdesk import CreationApproval, HelpdeskSession
-from agentshield.target import build_target_graph
+from agentshield.target import run_target
 from agentshield.tools import Category, list_scenarios
 
 
@@ -77,6 +78,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     target.add_argument("--profile", choices=("baseline", "protected"), default="protected")
     target.add_argument("--verbose", action="store_true")
     target.add_argument("--approve-subject", help="Approve one exact ticket subject for 60 seconds.")
+    target.add_argument("--trace-file", type=Path, help="Export the run journal to this JSON file.")
     args = parser.parse_args(argv)
 
     if args.command == "scenarios":
@@ -99,28 +101,52 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),)
 
     start = perf_counter()
+    session = None
+    failure = None
+    failure_exit_code = 1
     try:
-        model = create_model()
         if prepared is not None:
             session = HelpdeskSession(prepared, args.profile, approvals)
-            graph = build_target_graph(model, session)
+        model = create_model()
+        if session is not None:
+            messages = run_target(model, session, question)["messages"]
         else:
             graph = build_graph(model)
-        messages = graph.invoke({"messages": [HumanMessage(content=question)]})["messages"]
+            messages = graph.invoke({"messages": [HumanMessage(content=question)]})["messages"]
     except (ConfigurationError, GraphResponseError) as error:
-        print(f"Error: {error}", file=sys.stderr)
-        return 1
+        failure = (str(error), type(error).__name__)
     except APIError as error:
-        print(f"Error: {api_error_message(error)}", file=sys.stderr)
-        return 1
+        failure = (api_error_message(error), type(error).__name__)
     except GraphRecursionError:
-        print("Error: the graph reached its step limit.", file=sys.stderr)
-        return 1
+        failure = ("the graph reached its step limit.", "GraphRecursionError")
+    except KeyboardInterrupt:
+        failure = ("Execution interrupted.", "KeyboardInterrupt")
+        failure_exit_code = 130
+    except Exception as error:
+        failure = ("Execution failed. Inspect the run journal for the failure type.", type(error).__name__)
+
+    if failure is not None:
+        print(f"Error: {failure[0]}", file=sys.stderr)
+        if session is not None:
+            session.trace.finish("failed", failure[1])
+    if session is not None:
+        path = args.trace_file or Path(".private") / "traces" / f"{session.run_id}.json"
+        try:
+            session.trace.write(path)
+        except OSError:
+            print("Error: could not save the run journal.", file=sys.stderr)
+            return 1
+        print(f"Trace saved to {path}")
+    if failure is not None:
+        return failure_exit_code
 
     print(messages[-1].text)
     model_calls = sum(isinstance(message, AIMessage) for message in messages)
-    tool_calls = sum(isinstance(message, ToolMessage) for message in messages)
+    tool_calls = sum(isinstance(message, ToolMessage) and message.status == "success" for message in messages)
+    unsuccessful_calls = sum(isinstance(message, ToolMessage) and message.status == "error" for message in messages)
     print(f"\nCompleted with {model_calls} model response(s) and {tool_calls} tool execution(s).")
+    if unsuccessful_calls:
+        print(f"{unsuccessful_calls} unsuccessful tool call(s).")
     if args.verbose:
         print_trace(messages, model.model_name, perf_counter() - start)
     return 0

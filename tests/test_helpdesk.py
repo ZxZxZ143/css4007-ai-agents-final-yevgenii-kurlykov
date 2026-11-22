@@ -198,17 +198,17 @@ def test_target_graph_does_not_execute_repeated_call_id():
     assert len(session.state.tickets) == 3
 
 
-def test_target_cli_default_goal_with_mock_model(monkeypatch, capsys):
+def test_target_cli_default_goal_with_mock_model(monkeypatch, capsys, tmp_path):
     model = Mock()
     model.bind_tools.return_value.invoke.return_value = AIMessage(content="Synthetic answer")
     monkeypatch.setattr(cli, "create_model", lambda: model)
-    assert cli.main(["target", "--profile", "protected"]) == 0
+    assert cli.main(["target", "--profile", "protected", "--trace-file", str(tmp_path / "run.json")]) == 0
     assert "Synthetic answer" in capsys.readouterr().out
     assert model.bind_tools.return_value.invoke.call_args.args[0][-1].text == prepare_scenario("S1").scenario.goal
 
 
 @pytest.mark.parametrize("approved", [False, True])
-def test_target_cli_explicit_creation_approval(monkeypatch, capsys, approved):
+def test_target_cli_explicit_creation_approval(monkeypatch, capsys, approved, tmp_path):
     model = Mock()
     model.bind_tools.return_value.invoke.side_effect = [
         AIMessage(content="", tool_calls=[{
@@ -216,7 +216,7 @@ def test_target_cli_explicit_creation_approval(monkeypatch, capsys, approved):
         }]), AIMessage(content="Finished processing the tool result."),
     ]
     monkeypatch.setattr(cli, "create_model", lambda: model)
-    args = ["target", "Create a ticket", "--verbose"]
+    args = ["target", "Create a ticket", "--verbose", "--trace-file", str(tmp_path / "run.json")]
     if approved:
         args += ["--approve-subject", "New synthetic issue"]
     assert cli.main(args) == 0
@@ -225,3 +225,6 @@ def test_target_cli_explicit_creation_approval(monkeypatch, capsys, approved):
     output = capsys.readouterr().out
     expected = "T-S1-003" if approved else "approval_required"
     assert expected in output
+    if not approved:
+        assert "0 tool execution(s)" in output
+        assert "1 unsuccessful tool call(s)" in output

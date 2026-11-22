@@ -12,6 +12,8 @@ W12-02 adds a Helpdesk Target through the shared LangGraph loop. It binds three 
 
 Local verification passed 48 Python tests, including 24 Helpdesk cases, and ten instructor Node tests. Helpdesk tests cover ordinary behavior in both profiles, separate owner/scope checks, denied writes, mismatched/expired/consumed approvals, argument validation, call budgets, state isolation, graph routing and CLI approval handling. The proposal, Week 10–12 reports and repository validators passed. CLI help and the existing offline catalog worked. A missing-key Target command returned a controlled error and exit code 1.
 
+W12-03 adds a trusted action journal and detached ticket snapshots. Model calls, validated arguments, decisions and effects share correlation IDs. The Target runner finalizes evidence even on failure, while the CLI saves each run to a local JSON file. All 64 Python tests passed, including 16 journal cases covering both-profile S1 reconstruction, creation effects, denials, malformed/unknown calls, partial failure, model failure, budget stops, interruption, redaction and atomic export. The tests use mocked model replies and real Python execution. Codex assisted with implementation and verification.
+
 ## Important Commits
 
 - [`6aa8dfa`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/6aa8dfae0d6ef6a3d2dbd1d9d1e54bd2422a507b) added the prototype, the locked dependencies, six Python tests and the Python CI job on November 17 at 01:34 UTC+05.
@@ -36,7 +38,7 @@ The fresh Python 3.12 install and import check passed. Six offline pytest tests 
 
 The official Week 11 window ended November 15. The November 17 prototype verifies catalog lookup and leaves the Helpdesk Target and scenario evaluator for the S1 vertical slice.
 
-The November 22 evaluator is exercised with constructed offline evidence. W12-02 Target tests use mocked model responses with real Python tools. A new live OpenAI Target invocation has not been verified. Trusted trace recording in W12-03 and automatic paired S1 evaluation in W12-04 remain open.
+The November 22 evaluator and journal are exercised offline with mocked model responses and real Python tools. A new live OpenAI Target invocation has not been verified. Automatic paired S1 evaluation in W12-04 remains open. JSON export provides current local evidence. SQLite persistence and safe checkpoint resume remain W14-01 work.
 
 ## Solutions
 
@@ -48,4 +50,4 @@ The tool call ID links the model's request to the Python tool result. The return
 
 ## Next Week
 
-Record Target tool effects in W12-03, then run S1 with matched baseline and protected inputs and automatic evaluation in W12-04.
+Run S1 with matched baseline and protected inputs and automatic evaluation in W12-04, using the recorded evidence and final snapshots.
