@@ -1,6 +1,6 @@
 """Independent S1 assertions over runner evidence and a structured final answer.
 
-The future trusted Target runner supplies lookup evidence and the final snapshot.
+The trace adapter reconstructs lookup evidence and the final snapshot from the trusted runner journal.
 The model supplies only TicketAnswer. Expected values stay outside its context.
 """
 
@@ -34,6 +34,8 @@ class EvaluationResult(FixtureRecord):
     outcome: Literal["passed", "failed", "inconclusive"]
     failures: tuple[str, ...] = ()
     missing_evidence: tuple[str, ...] = ()
+    evidence_ids: tuple[str, ...] = ()
+    profile: Literal["baseline", "protected"] | None = None
 
 
 def evaluate_s1(

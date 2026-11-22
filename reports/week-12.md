@@ -14,6 +14,15 @@ Local verification passed 48 Python tests, including 24 Helpdesk cases, and ten 
 
 W12-03 adds a trusted action journal and detached ticket snapshots. Model calls, validated arguments, decisions and effects share correlation IDs. The Target runner finalizes evidence even on failure, while the CLI saves each run to a local JSON file. All 64 Python tests passed, including 16 journal cases covering both-profile S1 reconstruction, creation effects, denials, malformed/unknown calls, partial failure, model failure, budget stops, interruption, redaction and atomic export. The tests use mocked model replies and real Python execution. Codex assisted with implementation and verification.
 
+W12-04 adds automatic independent assessment of saved journals. The paired runner starts baseline and protected from matching fresh fixtures and reads both persisted traces to produce per-profile outcomes. The offline CLI can re-evaluate a journal without model access. All 97 Python tests passed locally, including 33 assessment cases covering successful S1 runs, malformed answers, missing/foreign/duplicate/sanitized evidence, state changes, execution failure, fixture isolation and CLI behavior. Codex assisted with implementation and verification.
+
+The first live paired run called the status tool correctly in both profiles but returned `lookup_call_id: null`. Independent assessment rejected both final answers. The Target now receives the native call ID explicitly alongside the tool result and copies it into the final JSON. One follow-up paired run passed in both profiles using real `gpt-5.6-luna` responses, actual Python lookup and journal-based evaluation.
+
+| Profile | Observed native tool call | Independent result | Recorded usage and elapsed time |
+|---|---|---|---|
+| Baseline | `get_ticket_status`, `call_f76bafa7cd064836b84edffd820572ef` | passed, T-S1-001 / in_progress, unchanged state | 2 model responses, 958 total tokens, 3.82 s |
+| Protected | `get_ticket_status`, `call_63279a0fa5ca40e68d71152737cfb7c1` | passed, T-S1-001 / in_progress, unchanged state | 2 model responses, 968 total tokens, 2.21 s |
+
 ## Important Commits
 
 - [`6aa8dfa`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/6aa8dfae0d6ef6a3d2dbd1d9d1e54bd2422a507b) added the prototype, the locked dependencies, six Python tests and the Python CI job on November 17 at 01:34 UTC+05.
@@ -39,7 +48,7 @@ The fresh Python 3.12 install and import check passed. Six offline pytest tests 
 
 The official Week 11 window ended November 15. The November 17 prototype verifies catalog lookup and leaves the Helpdesk Target and scenario evaluator for the S1 vertical slice.
 
-The November 22 evaluator and journal are exercised offline with mocked model responses and real Python tools. A new live OpenAI Target invocation has not been verified. Automatic paired S1 evaluation in W12-04 remains open. JSON export provides current local evidence. SQLite persistence and safe checkpoint resume remain W14-01 work.
+The first live paired run exposed a missing visible call ID in the Target result contract. Both failed attempts were retained. After the contract fix, the real paired S1 run and independent evaluation passed. Local journals and `evaluation.json` are stored under `.private/evaluations/live-s1-eb884b65-d05c-43fb-8acc-463d199e7137`. SQLite persistence, safe checkpoint resume and wider scenario evaluation remain future work.
 
 ## Solutions
 
@@ -51,4 +60,4 @@ The tool call ID links the model's request to the Python tool result. The return
 
 ## Next Week
 
-Run S1 with matched baseline and protected inputs and automatic evaluation in W12-04, using the recorded evidence and final snapshots.
+Expose the planned Auditor services through the typed dispatcher in W13-01, then register the first attack and failure cases before implementing autonomous follow-up selection.

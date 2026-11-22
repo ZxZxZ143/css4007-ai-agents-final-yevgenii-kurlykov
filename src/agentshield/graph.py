@@ -37,6 +37,7 @@ def build_graph(
     system: SystemMessage = SYSTEM,
     step_limit: int = STEP_LIMIT,
     trace: TraceRecorder | None = None,
+    include_tool_call_id: bool = False,
 ):
     registered_tools = {tool.name: tool for tool in tools}
     bound_model = model.bind_tools(list(tools), strict=True, parallel_tool_calls=False)
@@ -97,8 +98,9 @@ def build_graph(
             return {"messages": [ToolMessage(
                 content=str(error), name=call["name"], tool_call_id=call["id"], status="error"
             )]}
+        content = {"tool_call_id": call["id"], "result": result} if include_tool_call_id else result
         return {"messages": [ToolMessage(
-            content=json.dumps(result), name=call["name"], tool_call_id=call["id"], status="success"
+            content=json.dumps(content), name=call["name"], tool_call_id=call["id"], status="success"
         )]}
 
     graph = StateGraph(AgentState)

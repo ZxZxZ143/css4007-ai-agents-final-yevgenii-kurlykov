@@ -183,13 +183,17 @@ class TraceRecorder:
 
     def write(self, path: Path) -> None:
         """Atomically export observations through the trusted CLI."""
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = None
-        try:
-            with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:
-                temporary = Path(output.name)
-                output.write(self.document().model_dump_json(indent=2))
-            os.replace(temporary, path)
-        finally:
-            if temporary is not None:
-                temporary.unlink(missing_ok=True)
+        write_json_atomic(path, self.document().model_dump_json(indent=2))
+
+
+def write_json_atomic(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent, delete=False) as output:
+            temporary = Path(output.name)
+            output.write(content)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)

@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from time import perf_counter
 from typing import get_args
+from uuid import uuid4
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from langgraph.errors import GraphRecursionError
@@ -20,10 +21,12 @@ from openai import (
     RateLimitError,
 )
 
+from agentshield.assessment import evaluate_trace_file
 from agentshield.config import ConfigurationError, create_model
 from agentshield.fixtures import prepare_scenario
 from agentshield.graph import GraphResponseError, build_graph
 from agentshield.helpdesk import CreationApproval, HelpdeskSession
+from agentshield.s1 import run_s1_pair
 from agentshield.target import run_target
 from agentshield.tools import Category, list_scenarios
 
@@ -65,6 +68,33 @@ def print_trace(messages: Sequence[BaseMessage], requested_model: str, elapsed: 
     print(f"Elapsed = {elapsed:.2f}s")
 
 
+def assessment_command(args: argparse.Namespace) -> int:
+    try:
+        if args.command == "evaluate":
+            result = evaluate_trace_file(args.trace)
+            print(result.model_dump_json(indent=2))
+            return 0 if result.outcome == "passed" else 1
+        model = create_model()
+        directory = args.output_dir or Path(".private") / "evaluations" / str(uuid4())
+        report = run_s1_pair(model, directory)
+    except ConfigurationError as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
+    except (OSError, ValueError):
+        print("Error: could not read a valid journal or save the assessment files.", file=sys.stderr)
+        return 2
+    except KeyboardInterrupt:
+        print("Error: S1 assessment interrupted.", file=sys.stderr)
+        return 130
+    for run in report.runs:
+        print(f"{run.profile} = {run.evaluation.outcome}")
+        print(f"  Journal = {run.trace_path}")
+        for reason in (*run.evaluation.failures, *run.evaluation.missing_evidence):
+            print(f"  {reason}")
+    print(f"Assessment saved to {directory / 'evaluation.json'}")
+    return 0 if all(run.evaluation.outcome == "passed" for run in report.runs) else 1
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agentshield")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -79,7 +109,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     target.add_argument("--verbose", action="store_true")
     target.add_argument("--approve-subject", help="Approve one exact ticket subject for 60 seconds.")
     target.add_argument("--trace-file", type=Path, help="Export the run journal to this JSON file.")
+    evaluate = commands.add_parser("evaluate", help="Independently assess an S1 journal offline.")
+    evaluate.add_argument("trace", type=Path)
+    paired = commands.add_parser("s1", help="Run and assess S1 in both profiles from fresh fixtures.")
+    paired.add_argument("--output-dir", type=Path, help="Save both journals and evaluation.json here.")
     args = parser.parse_args(argv)
+
+    if args.command in ("evaluate", "s1"):
+        return assessment_command(args)
 
     if args.command == "scenarios":
         print(json.dumps(list_scenarios.invoke({"category": args.category}), indent=2))

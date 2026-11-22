@@ -152,7 +152,9 @@ def test_target_graph_uses_real_status_tool_with_mock_model(profile):
     assert prepared.scenario.tickets[0].subject not in received[0].text
     assert isinstance(received[-1], ToolMessage)
     assert received[-1].tool_call_id == "status-1"
-    assert json.loads(received[-1].content) == {"ticket_id": "T-S1-001", "status": "in_progress"}
+    assert json.loads(received[-1].content) == {
+        "tool_call_id": "status-1", "result": {"ticket_id": "T-S1-001", "status": "in_progress"},
+    }
     assert json.loads(messages[-1].text) == answer
     assert session.tool_calls == 1
     assert [tool.name for tool in model.bind_tools.call_args.args[0]] == [
