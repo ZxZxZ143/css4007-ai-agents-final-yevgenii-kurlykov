@@ -4,6 +4,10 @@
 
 On November 17, 2026, I completed the technical work carried over from Week 11. The Python 3.12 project installs from `uv.lock`, and the CLI runs a LangGraph agent with a read-only synthetic Helpdesk catalog. Codex assisted with implementation, tests, verification and documentation.
 
+On November 22, Codex assisted with W12-01. The registered S1 fixture includes a user goal, actor, allowed ticket ID, two synthetic tickets and explicit scenario/data revisions. Each preparation creates an independent state and run ID. A separate deterministic evaluator checks lookup evidence, the structured final answer and unchanged ticket state.
+
+Local verification on November 22 passed all 24 Python tests, including 18 S1 cases. They cover state reset, input validation, correct completion, incorrect answers and lookup results, missing evidence, foreign run/revision evidence, call correlation, state changes and unsupported oracle revisions. These are offline checks using constructed evidence.
+
 ## Important Commits
 
 - [`6aa8dfa`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/6aa8dfae0d6ef6a3d2dbd1d9d1e54bd2422a507b) added the prototype, the locked dependencies, six Python tests and the Python CI job on November 17 at 01:34 UTC+05.
@@ -26,6 +30,8 @@ The fresh Python 3.12 install and import check passed. Six offline pytest tests 
 
 The official Week 11 window ended November 15. The November 17 prototype verifies catalog lookup and leaves the Helpdesk Target and scenario evaluator for the S1 vertical slice.
 
+The November 22 evaluator is exercised with constructed offline evidence. The Helpdesk Target and trusted trace recorder still need implementation in W12-02 and W12-03 before claiming an end-to-end S1 run.
+
 ## Solutions
 
 The prototype uses Pydantic for tool arguments, a six-step graph limit, a per-request timeout and concise errors for missing credentials and API failures. CI runs the Python checks without live API requests.
@@ -36,4 +42,4 @@ The tool call ID links the model's request to the Python tool result. The return
 
 ## Next Week
 
-Build the S1 ticket lookup fixture, mock Helpdesk Target and independent expected-status assertion. Verify matched baseline and protected runs before adding adversarial cases.
+Implement the mock Helpdesk Target in W12-02 and record its tool effects in W12-03. Then run S1 with matched baseline and protected inputs in W12-04.

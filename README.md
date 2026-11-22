@@ -35,6 +35,8 @@ uv run --locked agentshield ask --verbose "What is AgentShield Lab?"
 
 The LangGraph model node can request `list_scenarios`, which filters the synthetic Helpdesk catalog. The tool node validates the arguments and returns the result to the model. A direct answer ends the graph. The verbose summary shows tool call IDs, validated arguments, results, response usage and elapsed time. Each graph run is limited to six steps.
 
+The S1 fixture and independent evaluator can be checked offline with `uv run --locked pytest tests/test_s1.py`. `prepare_scenario("S1")` creates isolated mock tickets and a scoped actor for each run. `evaluate_s1(...)` checks a recorded lookup, a structured ticket answer and the final state against its separate registered expectation. The Helpdesk Target and automatic trace recording are the next implementation step.
+
 ## Start here
 
 1. **Fork** [the instructor repository](https://github.com/ardakshalkar/css4007-ai-agents-final/fork) into your own account. Use a fork so the submission retains its relationship to the instructor repository.
