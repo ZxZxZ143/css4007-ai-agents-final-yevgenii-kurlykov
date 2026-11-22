@@ -30,10 +30,13 @@ The first live paired run called the status tool correctly in both profiles but 
 - [`a2b661d`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/a2b661d96db2532785cffa0552073ab9ad79e633) implements W12-01 on November 22. All 24 Python tests, ten Node tests and course checks passed locally. Both CI jobs passed for this code commit. [S1 implementation checks](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/45042828574)
 - [`e49a849`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/e49a849d860d12b9596002bbf4b20c151d3120cb) implements W12-02 on November 22 with 48 passing offline Python tests and ten Node tests. Both CI jobs passed for this code commit. [Helpdesk Target checks](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/45045024063)
 - [`067b50b`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/067b50bfa97e3ab9b4359c519dd53958897d301b) implements W12-03 with 64 passing Python tests, ten Node tests and passing course validators. Both CI jobs passed for this code commit. [Action journal checks](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/45046542090)
+- [`d6646e6`](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/commit/d6646e6d50ffcb990ab7228ac14d26e85cf5b358) completes W12-04 with 97 passing Python tests, ten Node tests, real Luna S1 passes in both profiles and successful offline replay. Both CI jobs passed for this code commit. [Paired assessment checks](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/45049120650)
 
 ## Current Functionality
 
 The graph routes model-selected calls to `list_scenarios` after validating the category. It returns the catalog result to the model and ends when the model produces a direct answer. The CLI displays the answer, tool outcome and available model usage in verbose mode.
+
+The `s1` command now runs the Helpdesk Target in both profiles, saves the actual journals and automatically assesses each persisted file. `evaluate` repeats assessment offline. The report contains independent outcomes, reasons and evidence IDs.
 
 Both live checks used `gpt-5.6-luna` through `ChatOpenAI` and the OpenAI Responses API.
 
