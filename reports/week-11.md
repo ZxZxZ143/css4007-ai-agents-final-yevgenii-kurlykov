@@ -32,3 +32,7 @@ Begin AgentShield Lab with the Python setup in W11-01, followed by the live Open
 ## Carryover completed November 17
 
 The Week 11 prototype was implemented during Week 12 ahead of the November 18 classroom review. The locked Python setup, CLI and both live GPT-5.6 Luna checks passed locally. The [Week 12 report](week-12.md) records the implementation commit and tool-call evidence.
+
+## Revision note (November 25, 2026)
+
+On November 25, 2026 (semester Week 13) the project topic changed from AgentShield Lab to DeskPilot. The AgentShield code described above was removed from the working tree but remains in Git history up to commit `d256875`. The current plan is in [proposal.md](proposal.md) and `docs/ROADMAP.md`.

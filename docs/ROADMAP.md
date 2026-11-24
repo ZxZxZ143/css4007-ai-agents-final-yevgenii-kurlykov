@@ -1,50 +1,125 @@
-# AgentShield Lab implementation roadmap
+# DeskPilot functional roadmap
 
-The windows below follow [project.config.json](../project.config.json). The [proposal](../reports/proposal.md) owns the architecture, tool contracts and evaluation criteria. The Week 11 prototype passed verification on November 17. The Week 12 S1 vertical slice passed independent evaluation in both profiles on November 22, including real Luna tool calls. Continue with the typed Auditor dispatcher before expanding scenarios. Keep academic dates and actual commit dates separate.
+Milestones are ordered by dependency, not by date. The orchestrator splits each task into micro-tasks (`AGENTS.md` §3). Only fixed course dates matter: paper selection by **December 6** and final submission by **December 22, 2026 23:59 UTC+05**.
 
-P0 gates dependent work. P1 is a required deliverable. Statuses are TODO, IN_PROGRESS, BLOCKED, VERIFYING and DONE. DONE requires acceptance evidence. Code tasks also need relevant tests and green CI for their latest relevant commit.
+Statuses: TODO, IN_PROGRESS, BLOCKED, REVIEW, DONE. DONE requires verified acceptance criteria (`AGENTS.md` §6). **Par** = tasks with the same letter in one milestone can run in parallel once their dependencies are done.
 
-| ID | Task | Priority | Depends on | Acceptance | Verification | Status |
-|---|---|---|---|---|---|---|
-| W10-01 | Verify fork and requirements | P0 | — | Student fork and course calendar confirmed | Origin, GitHub parent and config reviewed | DONE |
-| W10-02 | Define AgentShield Lab and academic plan | P0 | W10-01 | All required proposal and elapsed-week report sections complete and factual | Course validators and manual historical review | DONE |
-| W10-03 | Align roadmap, project map and operating policy | P0 | W10-02 | One consistent architecture, dependencies and actionable next step | Review of current docs and task IDs | DONE |
-| W10-04 | Publish planning revision | P1 | W10-03 | Publish to student main and verify CI for that SHA | Published commit `91f391c` and [successful Actions run](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/43891953333) | DONE |
-| W11-01 | Establish Python environment | P0 | W10-03 | Python 3.12+, compatible package lock, clean setup and local mock runner prerequisites | Fresh locked Python 3.12 install, imports, offline catalog and CI | DONE |
-| W11-02 | Verify OpenAI model and tool-call adapter | P0 | W11-01 | Configurable GPT via langchain-openai emits a schema-valid test call with recorded model, usage and latency | Luna selected `list_scenarios` through LangGraph. Python returned S2, backed by live trace and six offline tests | DONE |
-| W11-03 | Add validated CLI entry point | P0 | W11-02 | Parse goals/config, report structured errors and handle a no-tool request | Live CLI tool and no-tool requests, invalid category and missing credential checks | DONE |
-| W12-01 | Build synthetic fixtures and scenario registry | P0 | W11-03 | S1 goal, revisioned mock data, actor and separate oracle, with reset between tests | Registered S1, fresh state and independent lookup/answer/state checks. 18 S1 cases pass, 24 Python tests total. Code `a2b661d` passed CI | DONE |
-| W12-02 | Implement Helpdesk Target and profile policy | P0 | W12-01 | Minimal mock search, status and ticket creation tools. Profiles share tools and ordinary capabilities. Protected validates scope and approval | Three local tools, bounded Target graph and CLI. 24 Helpdesk cases, 48 Python tests total. Code `e49a849` passed CI. Model behavior tested offline | DONE |
-| W12-03 | Capture target traces and mock effects | P0 | W12-02 | Trace correlates model calls, arguments, decisions, failures and state snapshots | Scoped JSON journal, linked events and snapshots. 64 Python tests pass, including offline S1 reconstruction in both profiles. Code `067b50b` passed CI | DONE |
-| W12-04 | Complete deterministic vertical slice | P0 | W12-03 | S1 runs end to end in both profiles. Task failure and missing evidence are distinguishable | 97 Python tests, real Luna baseline/protected S1 passes, offline replay and missing-evidence counterexamples. Code `d6646e6` passed CI | DONE |
-| W13-01 | Expose Auditor tools through typed dispatcher | P0 | W12-04 | Six planned services with audit scope, structured errors, budget checks and evidence IDs | Contract tests and trace inspection | TODO |
-| W13-02 | Add first attack and failure scenarios | P0 | W13-01 | S2 and S5 registered with objective effect/cause oracles | Fixed fixture tests and independently evaluated runs | TODO |
-| W13-03 | Implement autonomous Auditor loop | P0 | W13-02 | LangGraph uses observations to branch and selects at least three meaningful tools through GPT | Real-model traces distinguish model selection from required nodes and show different follow-ups | TODO |
-| W14-01 | Persist checkpoints and audit ledger | P0 | W13-03 | Resume preserves budget and reconciles operation IDs before mock effects | Restart and duplicate-effect tests | TODO |
-| W14-02 | Compare profiles and report evidence | P0 | W14-01 | Paired inputs, explicit policy differences and reproducible report with inconclusive handling. Complete catalog S1–S8 | Matched run artifacts and deterministic report checks | TODO |
-| W14-03 | Select eligible research paper | P1 | W10-03 | LLM/agent paper originally released June 22–December 22, 2026. Complete paper selection by December 6 | Verify original publication metadata and fill required fields | TODO |
-| W15-01 | Harden containment, permissions and approval | P0 | W14-02 | Untrusted data cannot grant privileges. Enforce typed IDs, mock-only tools and valid action-bound approval | G01/G03, T03/T04 and scope tests | TODO |
-| W15-02 | Enforce budgets and failure recovery | P0 | W15-01 | Calls, retries, steps, tokens and deadlines bounded independently for Auditor and Target | G02/G04, timeout, malformed-result and resume tests | TODO |
-| W15-03 | Verify all mandatory guardrails | P0 | W15-02 | Four guardrail tests pass and show trace evidence of prevention or safe stopping | pytest and green CI | TODO |
-| W16-01 | Run paired real-model evaluation | P0 | W15-03 | At least 12 application tests including four guardrails, target 16. Run matched S1–S8 and compute metrics | pytest, CI, raw evidence and documented denominators | TODO |
-| W16-02 | Refine and rehearse live demo | P0 | W16-01 | Reproduce a complete autonomous audit and explain findings and limitations | Rerun regressions and rehearse with real model | TODO |
-| W16-03 | Prepare defense materials | P1 | W16-02, W14-03 | Setup instructions, Week 16 report, AI-use disclosure and 5–7 minute research presentation | Clean setup and timed rehearsal | TODO |
-| W17-01 | Verify submission package | P0 | W16-03 | Final report, honest weekly reports, test evidence, fork URL and final hash | Official checks, app tests, exact-SHA green CI | TODO |
-| W17-02 | Submit and defend | P0 | W17-01 | Submit by deadline and deliver live demo, unseen guardrail challenge and research presentation | Submission receipt and actual defense | TODO |
+## Open decisions
 
-## Weekly gates
+| ID | Decision | Needed before | Status |
+|---|---|---|---|
+| D-01 | Instructor agreement on file-system scope and the restricted command layer (A.md forbids *unrestricted* shell) | SY-03, final scope of SY-01 | open — student talks to instructor |
+| D-02 | Free speech-to-text engine with Russian streaming support | V-02 | open — research in V-01 |
+| D-03 | Web search API provider (free tier) | B-02 | open |
+| D-04 | Integration method for the user's own browser (extension vs. CDP) | B-05 | open |
+| D-05 | Final project name (working name: DeskPilot) | final report | open |
 
-| Week | Official window (2026) | Gate |
-|---|---|---|
-| 10 | Nov 2–8 | Proposal and planning documentation |
-| 11 | Nov 9–15 | Reproducible Python setup and real OpenAI tool call. Carryover into Week 12 |
-| 12 | Nov 16–22 | S1 completes end to end with mock traces and deterministic checks |
-| 13 | Nov 23–29 | Auditor selects three tools and adapts its next test to observed behavior |
-| 14 | Nov 30–Dec 6 | Safe resume, baseline/protected comparison, evidence report and paper selection |
-| 15 | Dec 7–13 | Four mandatory guardrail tests and safe stopping |
-| 16 | Dec 14–20 | Application test suite, paired evaluation and live demo rehearsal |
-| 17 | Dec 21–22 | Final submission and defense. Deadline Dec 22 at 23:59 UTC+05 |
+## M0 — Foundation
 
-Protect the vertical slice and genuine tool selection. If time is tight, defer a web UI, optional Helpdesk tools and extra variants. Keep paired inputs and deterministic oracles independent of model output. W13-01 is unblocked after the verified S1 vertical slice. Paper selection can proceed independently by December 6.
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| F-01 | Python project skeleton: `uv`, Python 3.12, `src/deskpilot`, pytest, lint, CLI entry point, Python CI job next to the course job | — | — | `uv sync --locked`, `uv run pytest` and CI green; course checks unchanged | TODO |
+| F-02 | Settings model and loader (TOML, Pydantic, hard maxima clamp, safe defaults) | F-01 | a | Invalid settings rejected with clear errors; values above hard maxima clamped; hard-deny list not configurable | TODO |
+| F-03 | Trace recorder: JSONL, run/event/operation IDs, redaction, bounded fields | F-01 | a | Events correlate model call → tool call → decision → result; secrets redacted; tests | TODO |
+| F-04 | Model client: configurable OpenAI model via `langchain-openai`, timeouts, typed API errors, fake model for tests | F-01 | a | Offline tests with fake model; missing key → controlled error; one live tool call recorded as evidence | TODO |
 
-The W12-04 code commit `d6646e6` passed the Python and Node jobs. The real paired S1 proof, initial failure and contract fix are recorded in the dated report. [GitHub Actions](https://github.com/ZxZxZ143/css4007-ai-agents-final-yevgenii-kurlykov/actions/runs/45049120650) · [Week 12 report](../reports/week-12.md)
+## M1 — Action policy gate
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| P-01 | Core policy types: `ActionRequest`, `RiskClass`, `Decision`, reason codes | F-01 | — | Strict models, exhaustive enums, tests | TODO |
+| P-02 | Path policy: zones, env expansion, UNC/device rejection, real-path resolution (symlink, junction, 8.3, `..`), hard deny | P-01, F-02 | b | Attack-path test table passes (traversal, junction into Windows, 8.3 alias, case tricks, UNC) on Windows | TODO |
+| P-03 | Approval service: action-bound, single-use, expiry, text channel, voice-channel interface with challenge code | P-01 | b | Changed args, reuse, expiry and wrong run all rejected; tests | TODO |
+| P-04 | Budgets and limits: steps, calls, retries, file ops, time, tokens | P-01, F-02 | b | Exhaustion stops dispatch with a stop reason; tests | TODO |
+| P-05 | Gate integration: `evaluate(action) → allow / needs_approval / deny`, settings-driven channel per risk class, risky-session flag | P-02, P-03, P-04, F-03 | — | Decision matrix tests per risk class; every decision traced; `dangerous` never auto-allowed | TODO |
+
+## M2 — Agent core
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| A-01 | Adapter SDK v0: tool declaration (args/result models, risk, paths, mock, verify), registry | P-01 | — | Registry exposes tools to the model; conformance checks enforced at registration | TODO |
+| A-02 | LangGraph loop: plan → act → gate → execute → observe → assess → replan/verify/report, explicit typed state | F-04, P-05, A-01 | — | Scripted fake-model runs show branching on observations, not a fixed sequence | TODO |
+| A-03 | Untrusted-content wrapping: bounds, provenance, observation IDs | A-02 | c | Injection text in observations cannot change settings or satisfy approval; tests | TODO |
+| A-04 | Failure recovery: typed tool errors, transient retry, fallback, safe stop | A-02 | c | Repeated failure stops after configured retries with evidence (G2) | TODO |
+| A-05 | Outcome verification and final report: completed / partial / failed / unverified | A-02 | c | Claimed effects re-checked by verifiers; unverifiable → `unverified` | TODO |
+| A-06 | Text CLI: run a goal, approve in console, print trace summary, `--sandbox` | A-02, P-03 | c | End-to-end run against mock adapters from the CLI | TODO |
+
+## M3 — Request pre-filter
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| R-01 | Lexicon + synonyms (RU/EN) + fuzzy matching | F-01 | d | Typos and word forms of dangerous intents detected; tests | TODO |
+| R-02 | Dataset: generated training set + hand-written holdout, labels safe/risky/malicious, dataset card | — | d | Versioned data files; holdout never used for training | TODO |
+| R-03 | Classifier (TF-IDF + logistic regression), threshold selection, metrics report | R-02 | — | Precision/recall per class on holdout recorded; model file reproducible from script | TODO |
+| R-04 | Pre-filter integration before the graph: refuse / flag / pass, never grant | R-01, R-03, A-02 | — | Malicious request refused before any tool call; risky flag forces approval for `modify` | TODO |
+| R-05 | Optional: Isolation Forest over action-sequence features for mid-run anomaly flags | A-02, F-03 | — | Anomalous synthetic sequences flagged; false-positive rate on normal runs recorded | TODO |
+
+## M4 — Adapter SDK v1 and tooling
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| S-01 | Scaffold generator `deskpilot adapter new <name>` with template tool, mock and tests | A-01 | e | Generated adapter passes conformance kit out of the box | TODO |
+| S-02 | Conformance test kit: strict schemas, declared risk, mock present, gate called, bounded output | A-01 | e | Kit fails on a deliberately broken adapter | TODO |
+| S-03 | `docs/ADAPTER_SDK.md`: how to build, test and register an adapter | S-01, S-02 | — | A new adapter can be built by following only this guide | TODO |
+
+## M5 — System adapters
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| SY-01 | Files: list, search, read text (bounded), create folder/file, write, rename, move, copy, delete to Recycle Bin | P-05, S-02 | f | All tools zone-checked for source and destination; sandbox tests | TODO |
+| SY-02 | Apps: open/focus/close from allowlist | S-02 | f | Non-allowlisted app denied; tests with mock process layer | TODO |
+| SY-03 | Command layer: PowerShell AST parse, classification, timeout, output bound | P-05, S-02, D-01 | f | Forbidden-command test table denied before execution; unknown → approval | TODO |
+| SY-04 | System info: processes, disk space, network, battery (read-only) | SY-03 or psutil | — | Read-only, bounded output | TODO |
+| SY-05 | Multi-step file scenario end to end (e.g. collect this week's PDFs into a folder and write a list) | SY-01, A-06 | — | Real-model run in sandbox: plan, approval, retry on locked file, verified outcome | TODO |
+
+## M6 — Browser and search
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| B-01 | Managed Playwright browser: navigate (http/https), read text, list/follow links, back, keep tab | S-02 | g | Non-http schemes denied; page text bounded and untrusted | TODO |
+| B-02 | Web search via API + local mock search provider | S-02, D-03 | g | Mock provider used in tests; API key only from `.env` | TODO |
+| B-03 | Local HTML fixture site: solution, no-solution, injection, broken pages | — | g | Served locally in tests | TODO |
+| B-04 | "Find the fix and leave the page open" scenario with replanning | B-01, B-02, B-03, A-02 | — | Agent skips the no-solution page, ignores the injection, ends on the solution page (G1 evidence) | TODO |
+| B-05 | User's own browser adapter (existing tabs) | B-01, D-04 | — | Every action `dangerous`; research result recorded | TODO |
+
+## M7 — Voice
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| V-01 | Research: free STT with Russian streaming, latency and CPU on the target laptop | — | h | Recommendation with measurements → D-02 | TODO |
+| V-02 | Audio capture + push-to-talk + streaming transcript into the session | V-01 | — | Recorded audio fixtures transcribed in tests | TODO |
+| V-03 | Wake phrase detection | V-02 | i | False-activation rate measured on background audio | TODO |
+| V-04 | Voice approval channel: challenge code, confidence threshold, text fallback | V-02, P-03 | i | Wrong code, low confidence and timeout never approve | TODO |
+| V-05 | Optional spoken responses (TTS) | V-02 | i | Can be disabled in settings | TODO |
+
+## M8 — Desktop UI
+
+| ID | Task | Depends on | Par | Acceptance | Status |
+|---|---|---|---|---|---|
+| U-01 | Tray application lifecycle and minimal settings window | F-02 | j | Starts, stops, edits settings safely | TODO |
+| U-02 | Island window states: listening, transcript, executing, awaiting approval, result, error; animations | U-01 | — | Visual states demonstrable with a scripted event stream | TODO |
+| U-03 | Session event bus wiring UI ↔ agent | U-02, A-02 | — | UI shows real run progress; no policy logic in UI | TODO |
+| U-04 | Approval UI (expand, summary, approve/deny, voice) | U-03, V-04 | — | Approval only for the displayed action; timeout denies | TODO |
+| U-05 | Global hotkey and emergency stop | U-03 | — | Stop halts dispatch within one step and is traced | TODO |
+
+## M9 — Additional adapters (on demand, one at a time)
+
+| ID | Task | Depends on | Acceptance | Status |
+|---|---|---|---|---|
+| X-01 | Windows UI Automation adapter (experimental) | S-03 | Passes conformance kit; actions on non-allowlisted windows denied | TODO |
+| X-nn | Further adapters requested by the user | S-03 | Conformance kit + scenario test | TODO |
+
+## M10 — Course deliverables and evaluation
+
+| ID | Task | Depends on | Acceptance | Status |
+|---|---|---|---|---|
+| C-01 | Select eligible research paper (released June 22 – December 22, 2026) and fill `reports/paper-selection.md` | — | Metadata verified; **due December 6** | TODO |
+| C-02 | Test suite: ≥12 application tests (target 16) incl. G1–G4, mapped in the proposal | A-04, P-05, B-04 | pytest + CI green | TODO |
+| C-03 | Real-model evaluation runs on scenario set, metrics with denominators | SY-05, B-04 | Raw evidence stored, failures kept | TODO |
+| C-04 | Live demo script and rehearsal (voice + text fallback) | C-03, U-04 | Timed rehearsal recorded | TODO |
+| C-05 | Research presentation (5–7 min) | C-01 | Rehearsed | TODO |
+| C-06 | Weekly reports, final report, AI-use disclosure, submission | all | Course validators + exact-SHA green CI | TODO |
+
+## Minimum path to Level A
+
+If time runs short, protect this chain: F-01 → F-04 → P-01…P-05 → A-01 → A-02…A-06 → SY-01 → B-01…B-04 → C-01…C-03. Voice (M7) and UI (M8) are the showcase and come after the text agent passes the guardrail tests; the text CLI remains the fallback for the defense.

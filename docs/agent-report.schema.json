@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DeskPilot subagent report",
+  "description": "Final message of every subagent. Short strings only; no prose outside this object.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "agent", "status", "summary"],
+  "properties": {
+    "task_id": { "type": "string", "description": "Micro-task ID, e.g. P-02.1" },
+    "agent": { "enum": ["implementer", "reviewer", "researcher"] },
+    "status": { "enum": ["done", "partial", "blocked", "failed"] },
+    "summary": { "type": "string", "maxLength": 300, "description": "At most two sentences" },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "change"],
+        "properties": {
+          "path": { "type": "string" },
+          "change": { "enum": ["added", "modified", "deleted"] },
+          "note": { "type": "string", "maxLength": 120 }
+        }
+      }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "command": { "type": "string" },
+        "passed": { "type": "integer" },
+        "failed": { "type": "integer" },
+        "skipped": { "type": "integer" },
+        "new_tests": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["criterion", "met"],
+        "properties": {
+          "criterion": { "type": "string" },
+          "met": { "type": "boolean" },
+          "evidence": { "type": "string", "maxLength": 200, "description": "test name, file:line or command output" }
+        }
+      }
+    },
+    "decisions": { "type": "array", "items": { "type": "string", "maxLength": 200 } },
+    "risks": { "type": "array", "items": { "type": "string", "maxLength": 200 } },
+    "blockers": { "type": "array", "items": { "type": "string", "maxLength": 200 } },
+    "followups": { "type": "array", "items": { "type": "string", "maxLength": 200 } },
+    "evidence": { "type": "array", "items": { "type": "string" }, "description": "Researcher sources (URLs with version/date)" },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict"],
+      "properties": {
+        "verdict": { "enum": ["accept", "revise", "reject"] },
+        "defects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["severity", "location", "issue"],
+            "properties": {
+              "severity": { "enum": ["blocking", "major", "minor"] },
+              "location": { "type": "string", "description": "file:line" },
+              "issue": { "type": "string", "maxLength": 200 },
+              "fix": { "type": "string", "maxLength": 200 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -64,3 +64,7 @@ The tool call ID links the model's request to the Python tool result. The return
 ## Next Week
 
 Expose the planned Auditor services through the typed dispatcher in W13-01, then register the first attack and failure cases before implementing autonomous follow-up selection.
+
+## Revision note (November 25, 2026)
+
+On November 25, 2026 (semester Week 13) the project topic changed from AgentShield Lab to DeskPilot. The AgentShield code described above was removed from the working tree but remains in Git history up to commit `d256875`. The current plan is in [proposal.md](proposal.md) and `docs/ROADMAP.md`.

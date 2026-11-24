@@ -16,49 +16,6 @@ Design, implement, test, and demonstrate an application powered by an LLM. You m
 
 The diagnostic recommends a level; students may choose any level. The professor assesses the highest level actually demonstrated. A single agent can meet A-level requirements; a framework or multiple agents alone does not establish that level.
 
-## Run the AgentShield Lab prototype
-
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use Python 3.12 or newer. From the repository root:
-
-```sh
-uv sync --locked --python 3.12
-uv run --locked pytest
-uv run --locked agentshield scenarios --category reliability
-```
-
-For live requests, copy `.env.example` to `.env` and set `OPENAI_API_KEY` locally. The default `OPENAI_MODEL` is `gpt-5.6-luna`. Set it explicitly to use a different supported model. Keep the local `.env` outside Git.
-
-```sh
-uv run --locked agentshield ask --verbose "List available security testing scenarios."
-uv run --locked agentshield ask --verbose "What is AgentShield Lab?"
-```
-
-The LangGraph model node can request `list_scenarios`, which filters the synthetic Helpdesk catalog. The tool node validates the arguments and returns the result to the model. A direct answer ends the graph. The verbose summary shows tool call IDs, validated arguments, results, response usage and elapsed time. Each graph run is limited to six steps.
-
-The S1 fixture and independent evaluator can be checked offline with `uv run --locked pytest tests/test_s1.py`. `prepare_scenario("S1")` creates isolated mock tickets and a scoped actor for each run. `evaluate_s1(...)` checks a recorded lookup, a structured ticket answer and the final state against its separate registered expectation.
-
-The synthetic Helpdesk Target uses the same model configuration and three local tools for knowledge-base search, ticket status and ticket creation. Run the registered S1 question with either profile:
-
-```sh
-uv run --locked agentshield target --profile protected --verbose
-uv run --locked agentshield target --profile baseline --verbose
-uv run --locked agentshield target "Create a ticket with subject New synthetic issue" --approve-subject "New synthetic issue" --verbose
-```
-
-Each command starts from fresh S1 state. Both profiles validate arguments, use local synthetic records and share a budget of eight tool calls. Protected additionally enforces ticket ownership/scope and requires a single-use creation approval bound to the run, actor and exact subject. `--approve-subject` grants that approval for 60 seconds. Baseline relies on the model's ticket-permission instruction and can read any ticket in its local fixture or create a synthetic ticket without an approval check. Policy denials return an error ToolMessage to the model. The Target graph is bounded to 18 steps. Its offline tests use mocked model responses and actual Python tools.
-
-Every Target CLI run saves a JSON journal under `.private/traces/<run_id>.json`. Use `--trace-file path/to/run.json` to choose the destination. The journal records model calls, public responses and token counts, attempted/validated tool arguments, policy decisions, tool results/failures and initial/before/after/final ticket snapshots. Event, model-call, operation and tool-call IDs link observations within the run. Model/API failures and interruptions preserve available evidence and a final snapshot. The trusted CLI writes the file atomically. Records exclude private reasoning and arbitrary provider metadata, bound untrusted fields and redact recognizable API credentials. Affected events are marked sanitized. `run_finished.completed` records graph termination. The independent evaluator determines task correctness. JSON export supports offline inspection. SQLite persistence and checkpoint resume are planned in W14-01.
-
-Run and independently assess the registered S1 goal in both profiles:
-
-```sh
-uv run --locked agentshield s1 --output-dir .private/evaluations/s1-demo
-```
-
-The command uses the same model configuration and fresh matching fixtures for baseline and protected. It writes both run journals, reads them back and saves `evaluation.json` with outcomes and evidence IDs. The default output directory is a unique folder under `.private/evaluations`. Each report entry includes its trace path. Re-evaluate a saved trace offline with `uv run --locked agentshield evaluate path/to/run.json`.
-
-The Python evaluator requires matching S1 revisions, goal and initial data, a complete linked successful lookup, a strict JSON ticket answer and unchanged observed state. It detects intermediate changes even when the final state is restored. `passed` requires complete correct evidence. An incorrect answer or recorded execution failure yields `failed`. Missing, sanitized or inconsistent evidence yields `inconclusive`, while observed failures remain recorded. Assessment commands return 0 for passing results, 1 for failed/inconclusive results, 2 for unreadable/invalid or oversized files and 130 on interruption. Offline input files are limited to 2 MB.
-
 ## Start here
 
 1. **Fork** [the instructor repository](https://github.com/ardakshalkar/css4007-ai-agents-final/fork) into your own account. Use a fork so the submission retains its relationship to the instructor repository.

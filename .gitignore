@@ -3,7 +3,6 @@
 !.env.example
 node_modules/
 .venv/
-.venv-tools/
 venv/
 __pycache__/
 *.pyc
@@ -14,3 +13,6 @@ Thumbs.db
 .private/
 *.pem
 *.key
+.venv-tools/
+.claude/worktrees/
+.claude/settings.local.json
