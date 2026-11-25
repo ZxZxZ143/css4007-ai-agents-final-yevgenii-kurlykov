@@ -1,0 +1,42 @@
+[project]
+name = "deskpilot"
+dynamic = ["version"]
+description = "Policy-gated voice and text controlled Windows desktop agent"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9",
+    "langchain-core",
+    "langchain-openai",
+    "langgraph",
+    "python-dotenv",
+]
+
+[project.scripts]
+deskpilot = "deskpilot.cli:main"
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/deskpilot/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deskpilot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers -m 'not live'"
+markers = ["live: uses the real network or model (deselected by default)"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [".venv-tools", "node_modules"]
+include = ["src/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]

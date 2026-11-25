@@ -1,0 +1,37 @@
+# DeskPilot settings example. Copy to %APPDATA%\DeskPilot\settings.toml.
+# Every key is optional; the values below are the defaults.
+#
+# Hard-deny zones, forbidden commands and mandatory approval for dangerous
+# actions are code constants. They cannot be configured here; keys such as
+# hard_deny, denylist, forbidden or hard_limits are rejected.
+
+model_id = "gpt-5.6-luna"      # non-empty
+language = "ru"                # "ru" or "en"
+
+# Absolute paths only. No drive roots (C:\), UNC or device paths, or '..' parts.
+# Default: Desktop, Documents, Downloads, Pictures, Music, Videos in the home folder.
+# allowed_roots = ['C:\Users\me\Documents', 'C:\Users\me\Downloads']
+
+# Optional directory used for development and tests.
+# sandbox_dir = 'C:\Users\me\deskpilot-sandbox'
+
+app_allowlist = ["notepad", "calc", "explorer"]
+stt_engine = "default"         # omit for no speech-to-text engine
+wake_phrase = "deskpilot"
+browser = "managed"            # only "managed" is supported
+
+[approvals]
+modify = "text"                # "voice", "text" or "none"
+dangerous = "text"             # "voice" or "text"; "none" is rejected
+
+# Positive integers (retries_per_operation may be 0). Values above the hard maximum are clamped with a warning.
+[budgets]
+steps = 30                     # max 100
+model_calls = 40               # max 100
+tool_calls = 60                # max 200
+retries_per_operation = 2      # 0 to 5
+file_ops_per_run = 100         # max 500
+browser_tabs = 5               # max 10
+command_timeout_s = 30         # max 120
+run_seconds = 600              # max 1800
+tokens = 100000                # max 500000
