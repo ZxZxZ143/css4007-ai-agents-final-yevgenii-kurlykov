@@ -16,3 +16,4 @@ Thumbs.db
 .venv-tools/
 .claude/worktrees/
 .claude/settings.local.json
+tests/.work/

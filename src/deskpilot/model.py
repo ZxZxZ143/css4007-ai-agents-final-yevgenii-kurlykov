@@ -10,7 +10,7 @@ import os
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 import openai
@@ -82,6 +82,10 @@ class ModelConfig(BaseModel):
     timeout_s: float = Field(default=60, gt=0, le=300)
     max_retries: int = Field(default=2, ge=0, le=5)
     temperature: float | None = None
+    # gpt-5.x reasoning models reject function tools on /v1/chat/completions unless
+    # reasoning is off, so the Responses API is the default transport.
+    use_responses_api: bool = True
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] | None = None
 
 
 class ToolCallRequest(BaseModel):
@@ -227,11 +231,14 @@ def create_openai_client(config: ModelConfig, api_key: SecretStr) -> ModelClient
     extra: dict[str, Any] = {}
     if config.temperature is not None:
         extra["temperature"] = config.temperature
+    if config.reasoning_effort is not None:
+        extra["reasoning_effort"] = config.reasoning_effort
     chat = ChatOpenAI(
         model=config.model_id,
         timeout=config.timeout_s,
         max_retries=config.max_retries,
         api_key=api_key,
+        use_responses_api=config.use_responses_api,
         **extra,
     )
     return ModelClient(chat, config)

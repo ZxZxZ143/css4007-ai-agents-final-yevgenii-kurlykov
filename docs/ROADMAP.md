@@ -21,23 +21,24 @@ Statuses: TODO, IN_PROGRESS, BLOCKED, REVIEW, DONE. DONE requires verified accep
 | F-01 | Python project skeleton: `uv`, Python 3.12, `src/deskpilot`, pytest, lint, CLI entry point, Python CI job next to the course job | — | — | `uv sync --locked`, `uv run pytest` and CI green; course checks unchanged | DONE (2026-11-25, CI run 45570618449 green on windows-latest for 9b5be4c) |
 | F-02 | Settings model and loader (TOML, Pydantic, hard maxima clamp, safe defaults) | F-01 | a | Invalid settings rejected with clear errors; values above hard maxima clamped; hard-deny list not configurable | DONE (local, 2026-11-25) |
 | F-03 | Trace recorder: JSONL, run/event/operation IDs, redaction, bounded fields | F-01 | a | Events correlate model call → tool call → decision → result; secrets redacted; tests | DONE (local, 2026-11-25) |
-| F-04 | Model client: configurable OpenAI model via `langchain-openai`, timeouts, typed API errors, fake model for tests | F-01 | a | Offline tests with fake model; missing key → controlled error; one live tool call recorded as evidence | REVIEW — offline part done; live evidence pending (`uv run pytest -m live` with a key) |
+| F-04 | Model client: configurable OpenAI model via `langchain-openai`, timeouts, typed API errors, fake model for tests | F-01 | a | Offline tests with fake model; missing key → controlled error; one live tool call recorded as evidence | DONE (2026-11-25; live tool call by gpt-5.6-luna via Responses API, evidence in `.private/evidence/f04-live-tool-call.json`) |
 
 ## M1 — Action policy gate
 
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
-| P-01 | Core policy types: `ActionRequest`, `RiskClass`, `Decision`, reason codes | F-01 | — | Strict models, exhaustive enums, tests | TODO |
-| P-02 | Path policy: zones, env expansion, UNC/device rejection, real-path resolution (symlink, junction, 8.3, `..`), hard deny | P-01, F-02 | b | Attack-path test table passes (traversal, junction into Windows, 8.3 alias, case tricks, UNC) on Windows | TODO |
-| P-03 | Approval service: action-bound, single-use, expiry, text channel, voice-channel interface with challenge code | P-01 | b | Changed args, reuse, expiry and wrong run all rejected; tests | TODO |
-| P-04 | Budgets and limits: steps, calls, retries, file ops, time, tokens | P-01, F-02 | b | Exhaustion stops dispatch with a stop reason; tests | TODO |
-| P-05 | Gate integration: `evaluate(action) → allow / needs_approval / deny`, settings-driven channel per risk class, risky-session flag | P-02, P-03, P-04, F-03 | — | Decision matrix tests per risk class; every decision traced; `dangerous` never auto-allowed | TODO |
+| P-01 | Core policy types: `ActionRequest`, `RiskClass`, `Decision`, reason codes | F-01 | — | Strict models, exhaustive enums, tests | DONE (local, 2026-11-25; CI pending) |
+| P-02 | Path policy: zones, env expansion, UNC/device rejection, real-path resolution (symlink, junction, 8.3, `..`), hard deny | P-01, F-02 | b | Attack-path test table passes (traversal, junction into Windows, 8.3 alias, case tricks, UNC) on Windows | DONE (local, 2026-11-25; CI pending) |
+| P-03 | Approval service: action-bound, single-use, expiry, text channel, voice-channel interface with challenge code | P-01 | b | Changed args, reuse, expiry and wrong run all rejected; tests | DONE (local, 2026-11-25; CI pending) |
+| P-04 | Budgets and limits: steps, calls, retries, file ops, time, tokens | P-01, F-02 | b | Exhaustion stops dispatch with a stop reason; tests | DONE (local, 2026-11-25; CI pending) |
+| P-05 | Gate integration: `evaluate(action) → allow / needs_approval / deny`, settings-driven channel per risk class, risky-session flag | P-02, P-03, P-04, P-06, F-03 | — | Decision matrix tests per risk class; every decision traced; `dangerous` never auto-allowed | DONE (local, 2026-11-25; CI pending) |
+| P-06 | Fast-path router: simple single-intent "open" requests (allowlisted app, known folder, explicit safe path, http/https URL; RU/EN) become a deterministic `ActionRequest` without a model call; everything else goes to the model | P-01 | b | Positive/negative routing table passes (compound, unknown app, executables, non-http schemes, injection text → model); output is a gate-ready `ActionRequest`; no model budget spent | DONE (local, 2026-11-25; CI pending) |
 
 ## M2 — Agent core
 
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
-| A-01 | Adapter SDK v0: tool declaration (args/result models, risk, paths, mock, verify), registry | P-01 | — | Registry exposes tools to the model; conformance checks enforced at registration | TODO |
+| A-01 | Adapter SDK v0: tool declaration (args/result models, risk, paths, mock, verify), registry | P-01 | — | Registry exposes tools to the model; conformance checks enforced at registration | DONE (local, 2026-11-25; CI pending) |
 | A-02 | LangGraph loop: plan → act → gate → execute → observe → assess → replan/verify/report, explicit typed state | F-04, P-05, A-01 | — | Scripted fake-model runs show branching on observations, not a fixed sequence | TODO |
 | A-03 | Untrusted-content wrapping: bounds, provenance, observation IDs | A-02 | c | Injection text in observations cannot change settings or satisfy approval; tests | TODO |
 | A-04 | Failure recovery: typed tool errors, transient retry, fallback, safe stop | A-02 | c | Repeated failure stops after configured retries with evidence (G2) | TODO |

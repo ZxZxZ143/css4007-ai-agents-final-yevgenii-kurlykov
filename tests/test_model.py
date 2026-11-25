@@ -220,3 +220,26 @@ def test_create_openai_client_defaults() -> None:
     c = create_openai_client(ModelConfig(), SecretStr(FAKE_KEY))
     assert c._chat_model.temperature is None
     assert c._chat_model.model_name == DEFAULT_MODEL_ID
+    assert c._chat_model.use_responses_api is True
+    assert c._chat_model.reasoning_effort is None
+
+
+def test_create_openai_client_reasoning_and_transport() -> None:
+    cfg = ModelConfig(use_responses_api=False, reasoning_effort="none")
+    chat = create_openai_client(cfg, SecretStr(FAKE_KEY))._chat_model
+    assert chat.use_responses_api is False
+    assert chat.reasoning_effort == "none"
+    with pytest.raises(ValueError):
+        ModelConfig(reasoning_effort="max")
+
+
+def test_text_ignores_reasoning_blocks() -> None:
+    msg = AIMessage(
+        content=[
+            {"type": "reasoning", "summary": [{"type": "summary_text", "text": "secret plan"}]},
+            {"type": "text", "text": "hello"},
+        ]
+    )
+    model = ScriptedChatModel(script=[msg])
+    resp = ModelClient(model, ModelConfig()).invoke([HumanMessage(content="hi")])
+    assert resp.text == "hello"
