@@ -18,7 +18,7 @@ Statuses: TODO, IN_PROGRESS, BLOCKED, REVIEW, DONE. DONE requires verified accep
 
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
-| F-01 | Python project skeleton: `uv`, Python 3.12, `src/deskpilot`, pytest, lint, CLI entry point, Python CI job next to the course job | — | — | `uv sync --locked`, `uv run pytest` and CI green; course checks unchanged | REVIEW — local checks green, reviewer accept; waiting for the first CI run after push |
+| F-01 | Python project skeleton: `uv`, Python 3.12, `src/deskpilot`, pytest, lint, CLI entry point, Python CI job next to the course job | — | — | `uv sync --locked`, `uv run pytest` and CI green; course checks unchanged | DONE (2026-11-25, CI run 45570618449 green on windows-latest for 9b5be4c) |
 | F-02 | Settings model and loader (TOML, Pydantic, hard maxima clamp, safe defaults) | F-01 | a | Invalid settings rejected with clear errors; values above hard maxima clamped; hard-deny list not configurable | DONE (local, 2026-11-25) |
 | F-03 | Trace recorder: JSONL, run/event/operation IDs, redaction, bounded fields | F-01 | a | Events correlate model call → tool call → decision → result; secrets redacted; tests | DONE (local, 2026-11-25) |
 | F-04 | Model client: configurable OpenAI model via `langchain-openai`, timeouts, typed API errors, fake model for tests | F-01 | a | Offline tests with fake model; missing key → controlled error; one live tool call recorded as evidence | REVIEW — offline part done; live evidence pending (`uv run pytest -m live` with a key) |
