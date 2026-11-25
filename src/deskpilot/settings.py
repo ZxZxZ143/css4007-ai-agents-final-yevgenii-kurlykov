@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, ValidationError, field_validator
 
-from deskpilot.defaults import DEFAULT_MODEL_ID
+from deskpilot.defaults import DEFAULT_MODEL_ID, DEFAULT_STRONG_MODEL_ID
 from deskpilot.limits import HARD_MAX
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,13 @@ class Budgets(_Model):
     command_timeout_s: StrictInt = Field(30, gt=0)
     run_seconds: StrictInt = Field(600, gt=0)
     tokens: StrictInt = Field(100_000, gt=0)
+    strong_model_calls: StrictInt = Field(5, gt=0)
+
+
+class CacheSettings(_Model):
+    enabled: bool = True
+    ttl_days: StrictInt = Field(14, ge=1, le=90)
+    max_entries: StrictInt = Field(200, ge=1, le=1000)
 
 
 def _default_allowed_roots() -> tuple[Path, ...]:
@@ -83,12 +90,14 @@ def _check_path(path: Path) -> None:
 
 class Settings(_Model):
     model_id: str = Field(DEFAULT_MODEL_ID, min_length=1)
+    strong_model_id: str = Field(DEFAULT_STRONG_MODEL_ID, min_length=1)
     language: Literal["ru", "en"] = "ru"
     allowed_roots: tuple[Path, ...] = Field(default_factory=_default_allowed_roots)
     sandbox_dir: Path | None = None
     app_allowlist: tuple[str, ...] = ("notepad", "calc", "explorer")
     approvals: Approvals = Field(default_factory=Approvals)
     budgets: Budgets = Field(default_factory=Budgets)
+    cache: CacheSettings = Field(default_factory=CacheSettings)
     stt_engine: str | None = None
     wake_phrase: str = Field("deskpilot", min_length=1)
     browser: Literal["managed"] = "managed"

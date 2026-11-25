@@ -5,7 +5,8 @@
 # actions are code constants. They cannot be configured here; keys such as
 # hard_deny, denylist, forbidden or hard_limits are rejected.
 
-model_id = "gpt-5.6-luna"      # non-empty
+model_id = "gpt-5.6-luna"      # fast model, non-empty
+strong_model_id = "gpt-5.5"    # strong model for code tasks and escalation, non-empty
 language = "ru"                # "ru" or "en"
 
 # Absolute paths only. No drive roots (C:\), UNC or device paths, or '..' parts.
@@ -35,3 +36,9 @@ browser_tabs = 5               # max 10
 command_timeout_s = 30         # max 120
 run_seconds = 600              # max 1800
 tokens = 100000                # max 500000
+strong_model_calls = 5         # max 20; strong calls also count as model_calls
+
+[cache]
+enabled = true                 # replay of verified recipes without model calls
+ttl_days = 14                  # 1 to 90
+max_entries = 200              # 1 to 1000

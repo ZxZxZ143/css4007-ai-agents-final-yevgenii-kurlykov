@@ -210,3 +210,34 @@ def test_credential_templates_present() -> None:
     for entry in ("~/.aws", "~/.kube", "%APPDATA%/Microsoft/Protect"):
         assert entry in limits.HARD_DENY_DIR_TEMPLATES
     assert limits.HARD_DENY_INSTALL_DIR is True
+
+
+def test_tier_and_cache_defaults() -> None:
+    s = Settings()
+    assert s.strong_model_id == "gpt-5.5"
+    assert s.budgets.strong_model_calls == 5
+    assert (s.cache.enabled, s.cache.ttl_days, s.cache.max_entries) == (True, 14, 200)
+
+
+def test_strong_calls_clamped_to_hard_max() -> None:
+    assert limits.HARD_MAX["strong_model_calls"] == 20
+    loaded = Settings.from_mapping({"budgets": {"strong_model_calls": 500}})
+    assert loaded.budgets.strong_model_calls == 20
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        {"strong_model_id": ""},
+        {"budgets": {"strong_model_calls": 0}},
+        {"cache": {"ttl_days": 0}},
+        {"cache": {"ttl_days": 91}},
+        {"cache": {"ttl_days": 1.5}},
+        {"cache": {"max_entries": 1001}},
+        {"cache": {"max_entries": 0}},
+        {"cache": {"unknown": 1}},
+    ],
+)
+def test_invalid_tier_and_cache_values(data: dict) -> None:
+    with pytest.raises(SettingsError):
+        Settings.from_mapping(data)

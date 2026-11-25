@@ -28,6 +28,11 @@ class EventKind(StrEnum):
     TOOL_RESULT = "tool_result"
     OBSERVATION = "observation"
     ERROR = "error"
+    MODEL_ESCALATED = "model_escalated"
+    CACHE_HIT = "cache_hit"
+    CACHE_MISS = "cache_miss"
+    CACHE_STORED = "cache_stored"
+    CACHE_INVALIDATED = "cache_invalidated"
     RUN_FINISHED = "run_finished"
 
 

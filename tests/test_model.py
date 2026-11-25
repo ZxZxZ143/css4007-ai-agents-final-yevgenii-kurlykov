@@ -24,6 +24,7 @@ from deskpilot.model import (
     ModelRateLimitError,
     ModelResponseError,
     ModelTimeoutError,
+    create_openai_chat,
     create_openai_client,
     load_api_key,
 )
@@ -243,3 +244,11 @@ def test_text_ignores_reasoning_blocks() -> None:
     model = ScriptedChatModel(script=[msg])
     resp = ModelClient(model, ModelConfig()).invoke([HumanMessage(content="hi")])
     assert resp.text == "hello"
+
+
+def test_create_openai_chat_is_what_the_client_wraps() -> None:
+    cfg = ModelConfig(model_id="chat-model", max_retries=0)
+    chat = create_openai_chat(cfg, SecretStr(FAKE_KEY))
+    assert chat.model_name == "chat-model"
+    assert FAKE_KEY not in repr(chat)
+    assert create_openai_client(cfg, SecretStr(FAKE_KEY)).config == cfg

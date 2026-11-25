@@ -196,3 +196,38 @@ def test_concurrent_tool_calls_respect_limit() -> None:
         th.join()
     assert len(ok) == 50
     assert t.snapshot()["used"]["tool_calls"] == 50
+
+
+def test_strong_call_counts_as_model_call() -> None:
+    t, _ = make(model_calls=3, strong_model_calls=1)
+    t.charge_model_call(strong=True)
+    used = t.snapshot()["used"]
+    assert used["model_calls"] == 1 and used["strong_model_calls"] == 1
+
+
+def test_strong_blocked_when_strong_budget_exhausted_but_model_calls_remain() -> None:
+    t, _ = make(model_calls=5, strong_model_calls=1)
+    t.charge_model_call(strong=True)
+    check = t.check_model_call(strong=True)
+    assert not check.ok and check.stop_reason == "budget_exhausted:strong_model_calls"
+    assert t.check_model_call().ok
+    with pytest.raises(BudgetExhausted) as exc:
+        t.charge_model_call(TokenUsage(total_tokens=10), strong=True)
+    assert exc.value.kind is BudgetKind.STRONG_MODEL_CALLS
+    used = t.snapshot()["used"]
+    assert used["model_calls"] == 1 and used["strong_model_calls"] == 1 and used["tokens"] == 0
+    t.charge_model_call()
+
+
+def test_strong_blocked_when_model_calls_exhausted_applies_nothing() -> None:
+    t, _ = make(model_calls=1, strong_model_calls=5)
+    t.charge_model_call()
+    with pytest.raises(BudgetExhausted) as exc:
+        t.charge_model_call(strong=True)
+    assert exc.value.kind is BudgetKind.MODEL_CALLS
+    assert t.snapshot()["used"]["strong_model_calls"] == 0
+
+
+def test_strong_limit_clamped_to_hard_max() -> None:
+    b = Budgets.model_construct(strong_model_calls=10**6)
+    assert BudgetTracker(b).snapshot()["limits"]["strong_model_calls"] == 20

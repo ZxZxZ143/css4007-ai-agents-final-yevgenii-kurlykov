@@ -39,6 +39,7 @@ class ProvenanceFlag(StrEnum):
     UNTRUSTED_CONTENT = "untrusted_content"
     RISKY_REQUEST = "risky_request"
     FAST_PATH = "fast_path"
+    CACHE_REPLAY = "cache_replay"
 
 
 class ReasonCode(StrEnum):

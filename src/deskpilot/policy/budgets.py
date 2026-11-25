@@ -24,6 +24,7 @@ from deskpilot.settings import Budgets
 class BudgetKind(StrEnum):
     STEPS = "steps"
     MODEL_CALLS = "model_calls"
+    STRONG_MODEL_CALLS = "strong_model_calls"
     TOOL_CALLS = "tool_calls"
     RETRIES = "retries"
     FILE_OPS = "file_ops"
@@ -70,6 +71,7 @@ class BudgetTracker:
         self._limits: dict[BudgetKind, int] = {
             BudgetKind.STEPS: _clamped(budgets, "steps"),
             BudgetKind.MODEL_CALLS: _clamped(budgets, "model_calls"),
+            BudgetKind.STRONG_MODEL_CALLS: _clamped(budgets, "strong_model_calls"),
             BudgetKind.TOOL_CALLS: _clamped(budgets, "tool_calls"),
             BudgetKind.RETRIES: _clamped(budgets, "retries_per_operation"),
             BudgetKind.FILE_OPS: _clamped(budgets, "file_ops_per_run"),
@@ -118,6 +120,12 @@ class BudgetTracker:
         used, limit = self._retries[operation_id], self._limits[BudgetKind.RETRIES]
         return BudgetExhausted(BudgetKind.RETRIES, limit, used) if used >= limit else None
 
+    def _model_failure(self, strong: bool) -> BudgetExhausted | None:
+        exc = self._failure(BudgetKind.MODEL_CALLS)
+        if exc is None and strong:
+            exc = self._exhausted(BudgetKind.STRONG_MODEL_CALLS)
+        return exc
+
     def _tool_failure(self, file_ops: int) -> BudgetExhausted | None:
         if file_ops < 0:
             raise ValueError("file_ops must be >= 0")
@@ -131,9 +139,9 @@ class BudgetTracker:
         with self._lock:
             return self._as_check(self._failure(BudgetKind.STEPS))
 
-    def check_model_call(self) -> BudgetCheck:
+    def check_model_call(self, strong: bool = False) -> BudgetCheck:
         with self._lock:
-            return self._as_check(self._failure(BudgetKind.MODEL_CALLS))
+            return self._as_check(self._model_failure(strong))
 
     def check_tool_call(self, file_ops: int = 0) -> BudgetCheck:
         with self._lock:
@@ -155,16 +163,18 @@ class BudgetTracker:
                 raise exc
             self._used[BudgetKind.STEPS] += 1
 
-    def charge_model_call(self, usage: TokenUsage | None = None) -> None:
+    def charge_model_call(self, usage: TokenUsage | None = None, *, strong: bool = False) -> None:
         """Count one model call and add its tokens.
 
         Tokens of a completed call are always recorded, even if they overshoot the
         limit: usage may exceed the limit after the fact and the next checks fail.
         """
         with self._lock:
-            if (exc := self._failure(BudgetKind.MODEL_CALLS)) is not None:
+            if (exc := self._model_failure(strong)) is not None:
                 raise exc
             self._used[BudgetKind.MODEL_CALLS] += 1
+            if strong:
+                self._used[BudgetKind.STRONG_MODEL_CALLS] += 1
             if usage is not None:
                 # Charge the larger figure so an understated total never lowers usage.
                 total = max(usage.total_tokens, usage.input_tokens + usage.output_tokens, 0)

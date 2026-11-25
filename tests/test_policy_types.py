@@ -281,3 +281,11 @@ def test_reason_risk_pairs(reason: ReasonCode, risk: RiskClass, ok: bool) -> Non
     else:
         with pytest.raises(ValidationError):
             dec(**kw)
+
+
+def test_cache_replay_flag_is_plain_and_ignored_by_fingerprint() -> None:
+    assert ProvenanceFlag.CACHE_REPLAY == "cache_replay"
+    plain = req()
+    replay = req(provenance=frozenset({ProvenanceFlag.CACHE_REPLAY}))
+    assert ProvenanceFlag.CACHE_REPLAY in replay.provenance
+    assert replay.fingerprint() == plain.fingerprint()

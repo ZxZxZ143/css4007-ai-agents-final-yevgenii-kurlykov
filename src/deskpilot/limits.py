@@ -19,6 +19,7 @@ HARD_MAX: Final[Mapping[str, int]] = MappingProxyType(
         "command_timeout_s": 120,
         "run_seconds": 1800,
         "tokens": 500_000,
+        "strong_model_calls": 20,
     }
 )
 

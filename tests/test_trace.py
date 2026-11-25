@@ -151,3 +151,17 @@ def test_run_id_reuse_rejected_and_chain_filter(tmp_path: Path):
     events = read_trace(path)
     assert len(operation_chain(events, "op")) == 2
     assert [e.run_id for e in operation_chain(events, "op", run_id="B")] == ["B"]
+
+
+def test_tier_and_cache_event_kinds(tmp_path: Path):
+    kinds = [
+        EventKind.MODEL_ESCALATED,
+        EventKind.CACHE_HIT,
+        EventKind.CACHE_MISS,
+        EventKind.CACHE_STORED,
+        EventKind.CACHE_INVALIDATED,
+    ]
+    with TraceRecorder(tmp_path / "t.jsonl") as rec:
+        for kind in kinds:
+            rec.emit(kind, {"k": 1})
+    assert [e.kind for e in read_trace(tmp_path / "t.jsonl")] == kinds

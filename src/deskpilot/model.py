@@ -224,8 +224,8 @@ class ModelClient:
         )
 
 
-def create_openai_client(config: ModelConfig, api_key: SecretStr) -> ModelClient:
-    """Build a ChatOpenAI-backed client. No network call happens here."""
+def create_openai_chat(config: ModelConfig, api_key: SecretStr) -> BaseChatModel:
+    """Build a ChatOpenAI chat model. No network call happens here."""
     from langchain_openai import ChatOpenAI
 
     extra: dict[str, Any] = {}
@@ -233,7 +233,7 @@ def create_openai_client(config: ModelConfig, api_key: SecretStr) -> ModelClient
         extra["temperature"] = config.temperature
     if config.reasoning_effort is not None:
         extra["reasoning_effort"] = config.reasoning_effort
-    chat = ChatOpenAI(
+    return ChatOpenAI(
         model=config.model_id,
         timeout=config.timeout_s,
         max_retries=config.max_retries,
@@ -241,4 +241,8 @@ def create_openai_client(config: ModelConfig, api_key: SecretStr) -> ModelClient
         use_responses_api=config.use_responses_api,
         **extra,
     )
-    return ModelClient(chat, config)
+
+
+def create_openai_client(config: ModelConfig, api_key: SecretStr) -> ModelClient:
+    """Build a ChatOpenAI-backed client. No network call happens here."""
+    return ModelClient(create_openai_chat(config, api_key), config)
