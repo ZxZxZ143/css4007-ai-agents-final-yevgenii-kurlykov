@@ -17,6 +17,7 @@ from deskpilot.agent.runner import report_for
 from deskpilot.cache import RecipeCache
 from deskpilot.model import ModelConfig, ModelConfigError, create_openai_chat, load_api_key
 from deskpilot.policy import ApprovalRequest
+from deskpilot.prefilter import evaluate
 from deskpilot.settings import Settings, SettingsError, default_settings_path, load_settings
 from deskpilot.trace import Outcome
 
@@ -25,6 +26,7 @@ ChatFactory = Callable[[str], BaseChatModel]
 EXIT_OK = 0
 EXIT_NOT_COMPLETED = 1
 EXIT_USAGE = 2
+EXIT_REFUSED = 3  # `deskpilot check`: the pre-filter would refuse the goal (flag and pass exit 0)
 EXIT_INTERRUPTED = 130
 
 _YES = frozenset({"y", "yes", "д", "да"})
@@ -62,6 +64,10 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--json", action="store_true", help="print the run result as JSON")
     run.add_argument("--model", help="fast model id")
     run.add_argument("--strong-model", help="strong model id")
+    check = commands.add_parser(
+        "check", help="show the pre-filter decision for a goal (runs nothing; exit 3 = refuse)"
+    )
+    check.add_argument("goal", help="the goal text to check")
     return parser
 
 
@@ -170,6 +176,18 @@ def _run(
     return EXIT_OK if result.outcome is Outcome.COMPLETED else EXIT_NOT_COMPLETED
 
 
+def _check(goal: str, stdout: TextIO) -> int:
+    decision = evaluate(goal)
+    print(f"verdict={decision.verdict}", file=stdout)
+    print(f"reasons={','.join(decision.reasons) or '-'}", file=stdout)
+    print(
+        f"lexicon={decision.lexicon_label} classifier={decision.classifier_label} "
+        f"malicious_score={decision.malicious_score} risk_score={decision.risk_score}",
+        file=stdout,
+    )
+    return EXIT_REFUSED if decision.verdict == "refuse" else EXIT_OK
+
+
 def main(
     argv: list[str] | None = None,
     *,
@@ -186,6 +204,8 @@ def main(
         return EXIT_OK
     stdin = stdin or sys.stdin
     stdout = stdout or sys.stdout
+    if args.command == "check":
+        return _check(args.goal, stdout)
     is_tty = stdin.isatty() if tty is None else tty
     try:
         return _run(args, chat_factory, stdin, stdout, is_tty)

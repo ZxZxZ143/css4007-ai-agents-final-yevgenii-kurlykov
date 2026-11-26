@@ -1,0 +1,152 @@
+{
+  "holdout_rows": 357,
+  "constants": {
+    "refuse_with_lexicon": 0.25,
+    "refuse_classifier_only": 0.85,
+    "classifier_refuse_threshold": 0.5,
+    "classifier_flag_threshold": 0.5
+  },
+  "systems": {
+    "lexicon_alone": {
+      "malicious_refused": {
+        "k": 88,
+        "n": 111,
+        "rate": 0.7928,
+        "wilson95": [
+          0.7082,
+          0.8578
+        ]
+      },
+      "safe_wrongly_refused": {
+        "k": 0,
+        "n": 142,
+        "rate": 0.0,
+        "wilson95": [
+          0.0,
+          0.0263
+        ]
+      },
+      "flagged_or_refused_unsafe": {
+        "k": 166,
+        "n": 215,
+        "rate": 0.7721,
+        "wilson95": [
+          0.7115,
+          0.8231
+        ]
+      },
+      "safe_wrongly_flagged_or_refused": {
+        "k": 4,
+        "n": 142,
+        "rate": 0.0282,
+        "wilson95": [
+          0.011,
+          0.0702
+        ]
+      },
+      "risky_wrongly_refused": {
+        "k": 2,
+        "n": 104,
+        "rate": 0.0192,
+        "wilson95": [
+          0.0053,
+          0.0674
+        ]
+      }
+    },
+    "classifier_alone": {
+      "malicious_refused": {
+        "k": 93,
+        "n": 111,
+        "rate": 0.8378,
+        "wilson95": [
+          0.7582,
+          0.8949
+        ]
+      },
+      "safe_wrongly_refused": {
+        "k": 4,
+        "n": 142,
+        "rate": 0.0282,
+        "wilson95": [
+          0.011,
+          0.0702
+        ]
+      },
+      "flagged_or_refused_unsafe": {
+        "k": 209,
+        "n": 215,
+        "rate": 0.9721,
+        "wilson95": [
+          0.9405,
+          0.9871
+        ]
+      },
+      "safe_wrongly_flagged_or_refused": {
+        "k": 13,
+        "n": 142,
+        "rate": 0.0915,
+        "wilson95": [
+          0.0543,
+          0.1503
+        ]
+      },
+      "risky_wrongly_refused": {
+        "k": 8,
+        "n": 104,
+        "rate": 0.0769,
+        "wilson95": [
+          0.0395,
+          0.1445
+        ]
+      }
+    },
+    "combined": {
+      "malicious_refused": {
+        "k": 93,
+        "n": 111,
+        "rate": 0.8378,
+        "wilson95": [
+          0.7582,
+          0.8949
+        ]
+      },
+      "safe_wrongly_refused": {
+        "k": 2,
+        "n": 142,
+        "rate": 0.0141,
+        "wilson95": [
+          0.0039,
+          0.0499
+        ]
+      },
+      "flagged_or_refused_unsafe": {
+        "k": 215,
+        "n": 215,
+        "rate": 1.0,
+        "wilson95": [
+          0.9824,
+          1.0
+        ]
+      },
+      "safe_wrongly_flagged_or_refused": {
+        "k": 16,
+        "n": 142,
+        "rate": 0.1127,
+        "wilson95": [
+          0.0706,
+          0.1752
+        ]
+      },
+      "risky_wrongly_refused": {
+        "k": 4,
+        "n": 104,
+        "rate": 0.0385,
+        "wilson95": [
+          0.0151,
+          0.0947
+        ]
+      }
+    }
+  }
+}

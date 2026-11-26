@@ -307,6 +307,8 @@ def render_markdown(m: dict[str, Any]) -> str:
         "  intervals are wide; treat all numbers as indicative, not as a guarantee.",
         "- The classifier only refuses or flags. It never grants permission; the action policy",
         "  gate remains the security boundary.",
+        "- The trained refuse_threshold is informational. The runtime decision uses the constants",
+        "  in `src/deskpilot/prefilter/decide.py` (see the combined section below).",
         "",
         "## Data and protocol",
         "",
@@ -369,6 +371,26 @@ def render_markdown(m: dict[str, Any]) -> str:
     ]
     lines += ["", "## Changes after a holdout run", "", "None: the holdout was evaluated once.", ""]
     return "\n".join(lines)
+
+
+BEGIN_MARK = "<!-- R-03:BEGIN -->"
+END_MARK = "<!-- R-03:END -->"
+FOREIGN_SECTION = "## Combined pre-filter (R-04)"
+
+
+def write_markdown(own: str) -> None:
+    """Write the R-03 part between markers and keep every other section of METRICS.md."""
+    rest = ""
+    if METRICS_MD_PATH.exists():
+        current = METRICS_MD_PATH.read_text(encoding="utf-8")
+        if END_MARK in current:
+            rest = current.split(END_MARK, 1)[1].strip("\n")
+        elif FOREIGN_SECTION in current:  # file written before the markers existed
+            rest = current[current.index(FOREIGN_SECTION) :].strip("\n")
+    text = f"{BEGIN_MARK}\n{own.strip(chr(10))}\n{END_MARK}\n"
+    if rest:
+        text += "\n" + rest + "\n"
+    METRICS_MD_PATH.write_text(text, encoding="utf-8", newline="\n")
 
 
 _DECISION_KEYS = (
@@ -443,7 +465,7 @@ def main() -> None:
     METRICS_PATH.write_text(
         json.dumps(metrics, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n"
     )
-    METRICS_MD_PATH.write_text(render_markdown(metrics), encoding="utf-8", newline="\n")
+    write_markdown(render_markdown(metrics))
     print(json.dumps({k: metrics[k] for k in ("chosen_c", "thresholds", "model_file_bytes")}))
     print("holdout macro F1", holdout["macro_f1"], holdout["decisions_overall"])
 
