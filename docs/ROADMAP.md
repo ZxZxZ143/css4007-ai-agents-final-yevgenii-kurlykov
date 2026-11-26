@@ -62,14 +62,14 @@ Statuses: TODO, IN_PROGRESS, BLOCKED, REVIEW, DONE. DONE requires verified accep
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
 | S-01 | Scaffold generator `deskpilot adapter new <name>` with template tool, mock and tests | A-01 | e | Generated adapter passes conformance kit out of the box | TODO |
-| S-02 | Conformance test kit: strict schemas, declared risk, mock present, gate called, bounded output | A-01 | e | Kit fails on a deliberately broken adapter | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
+| S-02 | Conformance test kit: strict schemas, declared risk, mock present, gate called, bounded output | A-01 | e | Kit fails on a deliberately broken adapter | DONE (2026-11-26; CI 45811484419 on 2e8f77d) |
 | S-03 | `docs/ADAPTER_SDK.md`: how to build, test and register an adapter | S-01, S-02 | — | A new adapter can be built by following only this guide | TODO |
 
 ## M5 — System adapters
 
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
-| SY-01 | Files: list, search, read text (bounded), create folder/file, write, rename, move, copy, delete to Recycle Bin | P-05, S-02 | f | All tools zone-checked for source and destination; sandbox tests | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
+| SY-01 | Files: list, search, read text (bounded), create folder/file, write, rename, move, copy, delete to Recycle Bin | P-05, S-02 | f | All tools zone-checked for source and destination; sandbox tests | DONE (2026-11-26; CI 45811484419 on 2e8f77d) |
 | SY-02 | Apps: open/focus/close from allowlist | S-02 | f | Non-allowlisted app denied; tests with mock process layer | TODO |
 | SY-03 | Command layer: PowerShell AST parse, classification, timeout, output bound | P-05, S-02, D-01 | f | Forbidden-command test table denied before execution; unknown → approval | TODO |
 | SY-04 | System info: processes, disk space, network, battery (read-only) | SY-03 or psutil | — | Read-only, bounded output | TODO |
