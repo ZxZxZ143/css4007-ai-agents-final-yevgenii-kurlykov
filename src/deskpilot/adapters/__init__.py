@@ -7,6 +7,7 @@ from deskpilot.adapters.base import (
     ToolSpec,
     VerifyResult,
 )
+from deskpilot.adapters.files import register_file_tools
 from deskpilot.adapters.registry import ConformanceError, ToolRegistry
 from deskpilot.adapters.system import register_system_tools
 
@@ -18,5 +19,6 @@ __all__ = [
     "ToolRegistry",
     "ToolSpec",
     "VerifyResult",
+    "register_file_tools",
     "register_system_tools",
 ]
