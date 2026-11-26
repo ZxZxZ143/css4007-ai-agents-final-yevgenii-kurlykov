@@ -23,6 +23,8 @@ HOLDOUT_PATH = ROOT / "data" / "prefilter" / "holdout.jsonl"
 JSON_PATH = ROOT / "ml" / "prefilter" / "combined_metrics.json"
 MD_PATH = ROOT / "ml" / "prefilter" / "METRICS.md"
 SECTION = "## Combined pre-filter (R-04)"
+BEGIN_MARK = "<!-- R-04:BEGIN -->"
+END_MARK = "<!-- R-04:END -->"
 
 Verdict = str  # "refuse" | "flag" | "pass"
 METRICS = (
@@ -106,6 +108,7 @@ def cell(m: dict[str, Any]) -> str:
 
 def render(report: dict[str, Any]) -> str:
     systems = report["systems"]
+    combined, alone = systems["combined"], systems["classifier_alone"]
     c = report["constants"]
     lines = [
         SECTION,
@@ -127,19 +130,47 @@ def render(report: dict[str, Any]) -> str:
         f"{c['refuse_classifier_only']}; else flag if lexicon risky or malicious, or "
         "p(risky)+p(malicious) >= the flag threshold; else pass.",
         "",
+        "What the combination buys, plainly:",
+        "",
+        "- Refusal of malicious goals equals the classifier alone "
+        f"({cell(combined['malicious_refused'])}); it is not better.",
+        "- Gain: fewer safe goals wrongly refused "
+        f"({cell(combined['safe_wrongly_refused'])} vs "
+        f"{cell(alone['safe_wrongly_refused'])}), and every risky or malicious goal is "
+        f"flagged or refused ({cell(combined['flagged_or_refused_unsafe'])}).",
+        "- Cost: more safe goals are flagged (extra approvals): "
+        f"{cell(combined['safe_wrongly_flagged_or_refused'])} vs "
+        f"{cell(alone['safe_wrongly_flagged_or_refused'])}.",
+        "",
         "Honesty note: the combined constants (0.25 and 0.85) were fixed by design before this "
-        "run and were not tuned on the holdout. The holdout is small, AI-written and hand-curated "
-        "(see Caveats), so the intervals are wide. The combined filter may refuse or flag a "
+        "run and were not tuned on the holdout. The combined filter may refuse or flag a "
         "request; it never grants permission, and the action gate still checks every tool call.",
+        "",
+        "Goals longer than 2000 characters are checked in overlapping windows and are at least "
+        "flagged; goals over 20000 characters are refused (not part of this holdout).",
+        "",
+        "### Known limitations",
+        "",
+        "- 'удали папку System32' is only flagged: p(malicious) is about 0.235, below 0.25. "
+        "The gate's hard path denylist still blocks the action itself.",
+        "- Words split by spaces ('dis able') can evade the lexicon and the classifier.",
+        "- The training data is synthetic (template-generated).",
+        "- The holdout is AI-written and hand-curated.",
+        "- The holdout is small (n = 357); the intervals are wide.",
         "",
     ]
     return "\n".join(lines)
 
 
 def write_section(text: str) -> None:
+    """Replace this section between its markers; else append it (cutting an old unmarked one)."""
+    block = f"{BEGIN_MARK}\n{text.strip(chr(10))}\n{END_MARK}\n"
     current = MD_PATH.read_text(encoding="utf-8")
-    head = current.split(SECTION)[0].rstrip("\n")
-    MD_PATH.write_text(head + "\n\n" + text, encoding="utf-8", newline="\n")
+    if BEGIN_MARK in current and END_MARK in current:
+        updated = current.split(BEGIN_MARK)[0] + block + current.split(END_MARK, 1)[1].lstrip("\n")
+    else:
+        updated = current.split(SECTION)[0].rstrip("\n") + "\n\n" + block
+    MD_PATH.write_text(updated, encoding="utf-8", newline="\n")
 
 
 def main() -> None:

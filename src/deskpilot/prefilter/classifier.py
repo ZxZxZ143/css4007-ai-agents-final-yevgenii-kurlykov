@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 FORMAT_VERSION = 1
+MAX_MODEL_BYTES = 5 * 1024 * 1024
 MAX_INPUT_CHARS = 2000
 CLASSES = ("malicious", "risky", "safe")
 _TOKEN_PATTERN = re.compile(r"(?u)\b\w\w+\b")
@@ -88,6 +89,18 @@ def _require(condition: bool, message: str) -> None:
         raise ClassifierModelError(message)
 
 
+def _reject_constant(name: str) -> Any:
+    raise ClassifierModelError(f"non-finite constant {name} in model")
+
+
+def _number(value: Any) -> float:
+    """A finite JSON number (not a bool, string or null)."""
+    _require(type(value) in (int, float), "expected a number")
+    result = float(value)
+    _require(math.isfinite(result), "non-finite number in model")
+    return result
+
+
 class PrefilterClassifier:
     """Linear classifier over word and char n-gram TF-IDF features."""
 
@@ -111,47 +124,61 @@ class PrefilterClassifier:
         try:
             if path is None:
                 resource = resources.files("deskpilot.prefilter") / "model" / "classifier.json"
-                raw = resource.read_text(encoding="utf-8")
+                raw = resource.read_bytes()
             else:
-                raw = path.read_text(encoding="utf-8")
-            data = json.loads(raw)
-        except (OSError, ValueError) as exc:
-            raise ClassifierModelError(f"cannot read classifier model: {exc}") from exc
-        try:
+                if path.stat().st_size > MAX_MODEL_BYTES:
+                    raise ClassifierModelError("model file is too large")
+                raw = path.read_bytes()
+            if len(raw) > MAX_MODEL_BYTES:
+                raise ClassifierModelError("model file is too large")
+            data = json.loads(raw.decode("utf-8"), parse_constant=_reject_constant)
             return cls._from_dict(data)
         except ClassifierModelError:
             raise
-        except (KeyError, TypeError, ValueError, IndexError) as exc:
-            raise ClassifierModelError(f"malformed classifier model: {exc!r}") from exc
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+            KeyError,
+            IndexError,
+            MemoryError,
+            RecursionError,
+        ) as exc:
+            raise ClassifierModelError(f"cannot load classifier model: {exc!r}") from exc
 
     @classmethod
     def _from_dict(cls, data: Any) -> PrefilterClassifier:
         _require(isinstance(data, dict), "model root must be an object")
         _require(
-            data.get("format_version") == FORMAT_VERSION,
+            type(data.get("format_version")) is int and data["format_version"] == FORMAT_VERSION,
             f"unsupported format_version {data.get('format_version')!r}",
         )
         _require(tuple(data["classes"]) == CLASSES, "unexpected classes")
         vectorizers: list[_Vectorizer] = []
         offset = 0
         for spec in data["vectorizers"]:
-            terms, idf = spec["terms"], spec["idf"]
+            terms = spec["terms"]
+            idf = [_number(v) for v in spec["idf"]]
             _require(len(terms) == len(idf) > 0, "terms and idf lengths differ")
+            _require(all(isinstance(t, str) for t in terms), "terms must be strings")
+            _require(all(v > 0.0 for v in idf), "idf must be positive")
             _require(spec["analyzer"] in ("word", "char_wb"), "unknown analyzer")
             low, high = spec["ngram_range"]
+            _require(type(low) is int and type(high) is int, "ngram bounds must be integers")
             _require(1 <= low <= high <= 8, "bad ngram_range")
             index = {t: i for i, t in enumerate(terms)}
             _require(len(index) == len(terms), "duplicate terms")
             vectorizers.append(
-                _Vectorizer(spec["analyzer"], (low, high), index, tuple(map(float, idf)), offset)
+                _Vectorizer(spec["analyzer"], (low, high), index, tuple(idf), offset)
             )
             offset += len(terms)
-        coef = [[float(w) for w in row] for row in data["coef"]]
-        intercept = [float(b) for b in data["intercept"]]
+        coef = [[_number(w) for w in row] for row in data["coef"]]
+        intercept = [_number(b) for b in data["intercept"]]
         _require(len(coef) == len(CLASSES) == len(intercept), "coef shape mismatch")
         _require(all(len(row) == offset for row in coef), "coef width != feature count")
         thresholds = data["thresholds"]
-        refuse, flag = float(thresholds["refuse_threshold"]), float(thresholds["flag_threshold"])
+        refuse = _number(thresholds["refuse_threshold"])
+        flag = _number(thresholds["flag_threshold"])
         _require(0.0 < refuse <= 1.0 and 0.0 < flag <= 1.0, "thresholds out of range")
         return cls(vectorizers, coef, intercept, refuse, flag)
 
