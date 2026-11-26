@@ -483,7 +483,7 @@ def test_unknown_tool_and_bad_args_are_reported_to_the_model(tmp_path: Path) -> 
         finish(False, "cannot"),
     ]
     chats = Chats(settings, fast=script)
-    result, deps, _ = run(tmp_path, "edit the registry", chats, settings=settings)
+    result, deps, _ = run(tmp_path, "look at the notes", chats, settings=settings)
     assert result.steps == ()
     assert "Invalid call" in sent_text(chats.fast)
     assert deps.budgets.snapshot()["used"]["tool_calls"] == 0

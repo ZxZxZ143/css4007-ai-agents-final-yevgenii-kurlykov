@@ -19,6 +19,7 @@ PREVIEW_CHARS = 500
 
 class EventKind(StrEnum):
     RUN_STARTED = "run_started"
+    PREFILTER_DECISION = "prefilter_decision"
     MODEL_CALL = "model_call"
     MODEL_RESULT = "model_result"
     TOOL_CALL = "tool_call"

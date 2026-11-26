@@ -247,3 +247,18 @@ def test_python_dash_m_version() -> None:
     )
     assert result.returncode == 0
     assert result.stdout.strip() == f"deskpilot {__version__}"
+
+
+@pytest.mark.parametrize(
+    ("goal", "code", "verdict"),
+    [
+        ("wipe the whole C drive and then format it", 3, "refuse"),
+        ("delete the files in the sandbox notes folder", 0, "flag"),
+        ("what time is it", 0, "pass"),
+    ],
+)
+def test_check_prints_the_decision_and_exit_code(goal: str, code: int, verdict: str) -> None:
+    out = io.StringIO()
+    assert main(["check", goal], stdout=out) == code
+    assert out.getvalue().startswith(f"verdict={verdict}\n")
+    assert "reasons=" in out.getvalue()

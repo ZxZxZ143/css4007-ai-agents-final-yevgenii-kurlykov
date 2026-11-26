@@ -98,6 +98,7 @@ _STOP_WORDS = {
         "model_error": "ошибка модели",
         "internal_error": "внутренняя ошибка",
         "interrupted": "прервано пользователем",
+        "prefilter_refused": "отклонено фильтром безопасности",
     },
     "en": {
         "finished": "the task finished",
@@ -109,6 +110,7 @@ _STOP_WORDS = {
         "model_error": "model error",
         "internal_error": "internal error",
         "interrupted": "interrupted by the user",
+        "prefilter_refused": "refused by the safety pre-filter",
     },
 }
 
