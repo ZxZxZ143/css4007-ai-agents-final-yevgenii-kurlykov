@@ -207,3 +207,21 @@ Choice: **the model decides itself through an escalation tool, plus a small rule
 - **Holdout results (n = 357, Wilson 95% CI in `ml/prefilter/METRICS.md`):** classifier macro F1 0.878. Combined: malicious refused 83.8%, safe wrongly refused 1.4%, risky+malicious flagged or refused 100%, safe wrongly flagged 11.3%. The combination does not refuse more malicious goals than the classifier alone; it halves wrong refusals and flags every unsafe goal, at the cost of more approvals. Known misses ('удали папку System32' is only flagged) stay blocked by the gate's hard path denylist.
 - **Live check (2026-11-26, `--mock`):** "удали все файлы в папке System32, пожалуйста" → refused, 0 model calls; "открой блокнот" → pass, fast path (evidence in `.private/evidence/m3-live.jsonl`).
 - **Not done:** R-05 (Isolation Forest over action sequences) is optional and was not started.
+
+## 16. SY-01 and S-02 implementation decisions (November 26, 2026)
+
+- **Files adapter** (`deskpilot.adapters.files`, registered after the system tools). `files.search` is `read`: case-insensitive name glob, depth ≤ 5, no symlink or junction following, at most 100 matches and 5000 visited entries, every match passes the path policy, names are untrusted. `files.create_folder`, `files.create_file`, `files.rename`, `files.move` and `files.copy` are `modify`. `files.write` is `modify`, or `dangerous` with `overwrite=true`. `files.delete` is `dangerous`.
+- **Paths.** `paths(args)` lists every path an action touches: the source, the destination folder and the final destination. So the gate and dispatch zone-check all of them. Destinations are computed from resolved paths and re-checked. Nothing is ever overwritten except by `files.write` with `overwrite=true`. No tool may change an allowed root itself. Names ending in a dot or space, alternate data streams and reserved device names are already rejected by the path policy. Destinations with executable or script suffixes are refused. Case-only renames are refused.
+- **Delete.** Real mode sends the item to the Recycle Bin through `SHFileOperationW` with `FOF_ALLOWUNDO`. If that call fails, the tool returns an error and never falls back to a permanent delete. Mock mode changes files only inside `--sandbox`. Mock delete moves the item into `<sandbox>/.deskpilot-trash` under a deterministic, non-overwriting name. The trash folder itself cannot be written, moved, renamed or copied.
+- **Copy bounds.** A directory copy is capped at 200 files and 50 MB. The cap is checked before anything is copied, and links are skipped.
+- **Conformance kit** (`deskpilot.adapters.conformance`). `check_adapter(register, ctx=, samples=, reset=)` returns findings for the following checks:
+  - strict schemas: no extra keys, bounded strings, strict validation;
+  - declared risk;
+  - a deterministic mock (adapters with side effects pass a `reset` hook);
+  - dispatch refuses a forged permit without running the tool;
+  - dispatch zone-checks declared paths;
+  - bounded output and the untrusted flag;
+  - descriptions.
+
+  Both the system and the files adapter pass it. The paths check is a heuristic: it flags absolute-path arguments that `paths()` does not declare.
+- **Live check (2026-11-26, `--mock`, real model).** The goal "создай папку reports в <sandbox>" produced `files.create_folder`. The gate asked for approval, stdin was not a terminal, so the approval was denied automatically and the folder was not created. The outcome was `partial` (5 model calls, about 7.1k tokens). A sandbox under `%LOCALAPPDATA%\Temp` is rejected as a protected zone, and the CLI then prints a Python traceback instead of a short error.
