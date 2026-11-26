@@ -16,7 +16,7 @@ dependencies = [
 deskpilot = "deskpilot.cli:main"
 
 [dependency-groups]
-dev = ["pytest", "ruff"]
+dev = ["pytest", "ruff", "scikit-learn", "numpy"]
 
 [build-system]
 requires = ["hatchling"]
