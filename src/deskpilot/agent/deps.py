@@ -11,7 +11,7 @@ from typing import Literal
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
-from deskpilot.adapters import ToolContext, ToolRegistry, register_system_tools
+from deskpilot.adapters import ToolContext, ToolRegistry, register_file_tools, register_system_tools
 from deskpilot.cache import RecipeCache
 from deskpilot.model import ModelClient, ModelConfig
 from deskpilot.policy import (
@@ -70,6 +70,7 @@ def build_deps(
     """Build everything one run needs. `extra_tools` lets tests or later adapters add tools."""
     registry = ToolRegistry()
     register_system_tools(registry)
+    register_file_tools(registry)
     if extra_tools is not None:
         extra_tools(registry)
     run_id = uuid.uuid4().hex

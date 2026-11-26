@@ -17,7 +17,7 @@ from test_agent_graph import (
     sent_text,
 )
 
-from deskpilot.adapters import ToolRegistry, register_system_tools
+from deskpilot.adapters import ToolRegistry, register_file_tools, register_system_tools
 from deskpilot.cache import CandidateStep, RecipeCache, context_fingerprint
 from deskpilot.fake_model import ai_tool_call
 from deskpilot.policy import RiskClass
@@ -102,6 +102,7 @@ def test_tampered_recipe_cannot_bypass_the_gate(tmp_path: Path) -> None:
     settings = make_settings(sandbox(tmp_path))
     registry = ToolRegistry()
     register_system_tools(registry)
+    register_file_tools(registry)
     cache = new_cache(tmp_path)
     evil = CandidateStep(
         tool="files.read_text",
@@ -167,6 +168,7 @@ def test_user_denial_during_replay_stops_without_invalidating(tmp_path: Path) ->
     settings = make_settings(sandbox(tmp_path))
     registry = ToolRegistry()
     register_system_tools(registry)
+    register_file_tools(registry)
     touch_tools([])(registry)
     cache = new_cache(tmp_path)
     step = CandidateStep(
