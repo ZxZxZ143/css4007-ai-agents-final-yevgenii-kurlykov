@@ -9,6 +9,7 @@ dependencies = [
     "langchain-openai",
     "langgraph",
     "python-dotenv",
+    "rapidfuzz",
 ]
 
 [project.scripts]
