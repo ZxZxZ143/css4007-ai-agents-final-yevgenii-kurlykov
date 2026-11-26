@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from deskpilot.adapters import (
     ToolRegistry,
     register_file_tools,
 )
+from deskpilot.adapters.conformance import check_adapter
 from deskpilot.adapters.files import MAX_COPY_FILES, recycle_bin_from
 from deskpilot.policy import (
     ActionGate,
@@ -381,3 +383,74 @@ def test_search_does_not_follow_links(env: Env) -> None:
 def test_recycle_bin_argument_is_double_nul_terminated() -> None:
     text = recycle_bin_from(Path(r"C:\x\a.txt"))
     assert text == "C:\\x\\a.txt\0\0"
+
+
+def test_mock_delete_names_are_deterministic_and_never_overwrite(env: Env) -> None:
+    names = []
+    for text in ("one", "two"):
+        (env.root / "a.txt").write_text(text)
+        out = env.run("files.delete", path=str(env.root / "a.txt"))
+        names.append(Path(out.data["recycled_to"]).name)
+    assert names == ["a.txt", "a.txt.1"]
+    assert (env.root / ".deskpilot-trash" / "a.txt").read_text() == "one"
+
+
+def test_trash_folder_is_protected(env: Env) -> None:
+    (env.root / "a.txt").write_text("x")
+    (env.root / "b.txt").write_text("y")
+    (env.root / "d").mkdir()
+    env.run("files.delete", path=str(env.root / "a.txt"))
+    trash = str(env.root / ".deskpilot-trash")
+    item = trash + r"\a.txt"
+    results = [
+        env.run("files.move", src=trash, dst_dir=str(env.root / "d")),
+        env.run("files.move", src=item, dst_dir=str(env.root / "d")),
+        env.run("files.move", src=str(env.root / "b.txt"), dst_dir=trash),
+        env.run("files.rename", path=trash, new_name="t2"),
+        env.run("files.rename", path=item, new_name="z.txt"),
+        env.run("files.copy", src=str(env.root / "b.txt"), dst_dir=trash),
+        env.run("files.create_file", path=trash + r"\n.txt"),
+        env.run("files.create_folder", path=trash + r"\sub"),
+        env.run("files.write", path=trash + r"\n.txt", text="x"),
+        env.run("files.delete", path=trash),
+        env.run("files.delete", path=item),
+    ]
+    assert [kind(r) for r in results] == ["permission"] * len(results)
+    assert (env.root / ".deskpilot-trash" / "a.txt").exists()
+
+
+def test_case_only_rename_is_refused(env: Env) -> None:
+    (env.root / "a.txt").write_text("x")
+    out = env.run("files.rename", path=str(env.root / "a.txt"), new_name="A.TXT")
+    assert kind(out) == "invalid_args"
+    assert (env.root / "a.txt").read_text() == "x"
+
+
+def test_adapter_conformance_kit(env: Env) -> None:
+    r = env.root
+
+    def reset() -> None:
+        for child in list(r.iterdir()):
+            if child.is_dir():
+                shutil.rmtree(child)
+            else:
+                child.unlink()
+        (r / "src.txt").write_text("hello", encoding="utf-8")
+        (r / "dst").mkdir()
+
+    reset()
+    samples = {
+        "files.search": [{"root": str(r), "pattern": "*.txt"}],
+        "files.create_folder": [{"path": str(r / "new")}],
+        "files.create_file": [{"path": str(r / "new.txt"), "text": "x"}],
+        "files.write": [
+            {"path": str(r / "w.txt"), "text": "x"},
+            {"path": str(r / "src.txt"), "text": "y", "overwrite": True},
+        ],
+        "files.rename": [{"path": str(r / "src.txt"), "new_name": "renamed.txt"}],
+        "files.move": [{"src": str(r / "src.txt"), "dst_dir": str(r / "dst")}],
+        "files.copy": [{"src": str(r / "src.txt"), "dst_dir": str(r / "dst")}],
+        "files.delete": [{"path": str(r / "src.txt")}],
+    }
+    report = check_adapter(register_file_tools, ctx=env.ctx, samples=samples, reset=reset)
+    assert report.ok, "\n".join(map(str, report.findings))
