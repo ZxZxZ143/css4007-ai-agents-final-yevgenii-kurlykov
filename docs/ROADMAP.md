@@ -51,10 +51,10 @@ Statuses: TODO, IN_PROGRESS, BLOCKED, REVIEW, DONE. DONE requires verified accep
 
 | ID | Task | Depends on | Par | Acceptance | Status |
 |---|---|---|---|---|---|
-| R-01 | Lexicon + synonyms (RU/EN) + fuzzy matching | F-01 | d | Typos and word forms of dangerous intents detected; tests | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
-| R-02 | Dataset: generated training set + hand-written holdout, labels safe/risky/malicious, dataset card | — | d | Versioned data files; holdout never used for training | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
-| R-03 | Classifier (TF-IDF + logistic regression), threshold selection, metrics report | R-02 | — | Precision/recall per class on holdout recorded; model file reproducible from script | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
-| R-04 | Pre-filter integration before the graph: refuse / flag / pass, never grant | R-01, R-03, A-02 | — | Malicious request refused before any tool call; risky flag forces approval for `modify` | LOCAL OK (2026-11-26; reviewed; awaiting commit + CI) |
+| R-01 | Lexicon + synonyms (RU/EN) + fuzzy matching | F-01 | d | Typos and word forms of dangerous intents detected; tests | DONE (2026-11-26; CI 45803636246 on 67bc0a8) |
+| R-02 | Dataset: generated training set + hand-written holdout, labels safe/risky/malicious, dataset card | — | d | Versioned data files; holdout never used for training | DONE (2026-11-26; CI 45803636246 on 67bc0a8) |
+| R-03 | Classifier (TF-IDF + logistic regression), threshold selection, metrics report | R-02 | — | Precision/recall per class on holdout recorded; model file reproducible from script | DONE (2026-11-26; CI 45803636246 on 67bc0a8) |
+| R-04 | Pre-filter integration before the graph: refuse / flag / pass, never grant | R-01, R-03, A-02 | — | Malicious request refused before any tool call; risky flag forces approval for `modify` | DONE (2026-11-26; CI 45803636246 on 67bc0a8) |
 | R-05 | Optional: Isolation Forest over action-sequence features for mid-run anomaly flags | A-02, F-03 | — | Anomalous synthetic sequences flagged; false-positive rate on normal runs recorded | TODO (optional; not started in M3) |
 
 ## M4 — Adapter SDK v1 and tooling
