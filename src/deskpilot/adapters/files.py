@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import ctypes
 import fnmatch
+import itertools
 import ntpath
 import os
 import shutil
 import stat
 import sys
-import uuid
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Final
@@ -32,7 +32,7 @@ MAX_SEARCH_DEPTH: Final = 5
 MAX_WRITE_CHARS: Final = 100_000
 MAX_COPY_FILES: Final = 200
 MAX_COPY_BYTES: Final = 50 * 1024 * 1024
-TRASH_DIR: Final = ".deskpilot-trash"
+TRASH_DIR: Final = ".deskpilot-trash"  # lower case: compared after normcase
 
 BLOCKED_SUFFIXES: Final = frozenset(
     {
@@ -165,6 +165,8 @@ def _guard(ctx: ToolContext, *paths: Path, parents: tuple[Path, ...] = ()) -> No
         sandbox = ctx.path_policy.check(str(ctx.sandbox_dir)).resolved if ctx.sandbox_dir else None
         if sandbox is None or not all(_is_inside(p, sandbox) for p in (*paths, *parents)):
             raise ToolError("unsupported", "mock file changes need a sandbox")
+    if any(TRASH_DIR in (os.path.normcase(x) for x in p.parts) for p in (*paths, *parents)):
+        raise ToolError("permission", "the trash folder is protected")
     roots = _roots(ctx)
     if any(_same(p, r) for p in paths for r in roots):
         raise ToolError("permission", "an allowed root itself cannot be changed")
@@ -436,10 +438,12 @@ def _delete(args: PathArgs, ctx: ToolContext) -> DeleteResult:
 def _delete_mock(args: PathArgs, ctx: ToolContext) -> DeleteResult:
     src = _delete_target(args, ctx)
     trash = _resolve(ctx, str(Path(str(ctx.sandbox_dir)) / TRASH_DIR))
-    if _is_inside(src, trash):
-        raise ToolError("invalid_args", "item is already in the trash")
     trash.mkdir(exist_ok=True)
-    dest = trash / f"{uuid.uuid4().hex[:8]}-{src.name}"
+    dest = trash / src.name
+    for n in itertools.count(1):  # first free name: deterministic, never overwrites
+        if not os.path.lexists(dest):
+            break
+        dest = trash / f"{src.name}.{n}"
     src.rename(dest)
     return DeleteResult(path=str(src), recycled_to=str(dest))
 
